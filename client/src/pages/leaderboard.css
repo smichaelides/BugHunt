@@ -1,0 +1,101 @@
+h2 {
+    color: #2563eb; /* Blue text for all h2 headers */
+    margin-bottom: 2rem;
+    text-align: center;
+    font-size: 2rem;
+    font-family: 'Monaco', monospace;
+} 
+
+.leaderboard-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.leaderboard-item {
+    background-color: #f8fafc;
+    margin: 1rem 0;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease;
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+}
+
+.leaderboard-item:hover {
+    transform: translateY(-2px);
+    background-color: #e6f0ff;
+}
+
+.rank-badge {
+    background-color: #2563eb;
+    color: white;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-family: 'Monaco', monospace;
+}
+
+.user-info {
+    flex-grow: 1;
+}
+
+.username {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2563eb;
+    font-family: 'Monaco', monospace;
+    display: block;
+    margin-bottom: 0.75rem;
+}
+
+.user-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.stat-label {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.stat-value {
+    color: #1e40af;
+    font-weight: 600;
+    font-family: 'Monaco', monospace;
+}
+
+.no-data {
+    text-align: center;
+    padding: 2rem;
+    color: #64748b;
+}
+
+/* First place styling 
+.leaderboard-item:first-child {
+    background-color: #eff6ff;
+    border: 2px solid #2563eb;
+}
+
+.leaderboard-item:first-child .rank-badge {
+    background-color: gold;
+    font-size: 1.2rem;
+}
+    */

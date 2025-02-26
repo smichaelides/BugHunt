@@ -1,0 +1,53 @@
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 4rem;
+    background-color: #2563eb;  /* blue-600 */
+    color: white;
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-family: 'Monaco', monospace;
+}
+
+.navbar-brand {
+    padding: 0 1rem;
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+.menu-icon {
+    padding: 0 1rem;
+    cursor: pointer;
+    display: none;  /* Hidden by default, shown on mobile */
+}
+
+.icon {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.nav-links {
+    padding-right: 1.25rem;
+}
+
+.nav-link {
+    padding: 1rem;
+    border-radius: 9999px;  /* full rounded */
+    transition: background-color 0.3s ease;
+}
+
+.nav-link:hover {
+    background-color: #1d4ed8;  /* blue-700 */
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .menu-icon {
+        display: block;
+    }
+
+    .nav-links {
+        display: none;
+    }
+} 

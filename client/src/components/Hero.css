@@ -1,0 +1,100 @@
+.hero-container {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+    padding: 2rem;
+    height: calc(100vh - 4rem); /* Full height minus padding */
+    background-color: #f0f7ff; /* Light blue background */
+}
+
+.debug-units-section {
+    background-color: #ffffff;
+    padding: 1.5rem;
+    border-radius: 10px;
+    overflow-y: auto;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.units-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.unit-item {
+    padding: 1rem;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.unit-item:hover {
+    transform: translateY(-2px);
+    background-color: #e6f0ff; /* Light blue on hover */
+}
+
+.right-sections {
+    display: grid;
+    grid-template-rows: 1fr 2fr;
+    gap: 2rem;
+}
+
+.welcome-section, .daily-puzzle-section {
+    background-color: #ffffff;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.stat-item {
+    background-color: #ffffff;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.stat-item:hover {
+    transform: translateY(-2px);
+    background-color: #e6f0ff; /* Light blue on hover */
+}
+
+.stat-item h3 {
+    font-size: 1rem;
+    color: #2563eb; /* Blue text for headers */
+    margin-bottom: 0.5rem;
+}
+
+.stat-item p {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #1e40af; /* Darker blue for numbers */
+}
+
+.daily-puzzle-container {
+    margin-top: 1rem;
+    background-color: #ffffff;
+    padding: 1rem;
+    border-radius: 8px;
+    height: calc(100% - 4rem);
+}
+
+h2 {
+    color: #2563eb; /* Blue text for all h2 headers */
+    margin-bottom: 1rem;
+    text-align: center;
+    font-size: 2rem;
+    font-weight: bold;
+    font-family: 'Monaco', monospace;
+} 
