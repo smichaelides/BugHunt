@@ -1,16 +1,12 @@
 -- Drop tables if they exist
-CREATE DATABASE bughunt_db; 
-
-DROP TABLE IF EXISTS users CASCADE;
-DROP TABLE IF EXISTS challenges CASCADE;
 DROP TABLE IF EXISTS user_progress CASCADE;
 DROP TABLE IF EXISTS leaderboard CASCADE;
-DROP TABLE IF EXISTS Problem;
-DROP TABLE IF EXISTS User;
+DROP TABLE IF EXISTS problems CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
 
--- Create Problem Table
-CREATE TABLE Problem (
-    ProblemID INT PRIMARY KEY AUTO_INCREMENT,
+-- Create Problems Table
+CREATE TABLE problems (
+    ProblemID SERIAL PRIMARY KEY,
     Difficulty VARCHAR(50),
     Description TEXT,
     Code TEXT,
@@ -20,13 +16,14 @@ CREATE TABLE Problem (
     WrongOption3 TEXT
 );
 
--- Create User Table
-CREATE TABLE User (
-    UserID INT PRIMARY KEY AUTO_INCREMENT,
+-- Create Users Table (renamed from 'user' to avoid reserved keyword conflicts)
+CREATE TABLE users (
+    UserID SERIAL PRIMARY KEY,
     Username VARCHAR(50) NOT NULL,
     Email VARCHAR(100) NOT NULL UNIQUE,
     StreakCounter INT DEFAULT 0,
     Points INT DEFAULT 0,
     ChallengesCompleted INT DEFAULT 0
 );
+
 
