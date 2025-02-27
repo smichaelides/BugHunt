@@ -1,3 +1,5 @@
+
+// script to populate the database with questions
 require('dotenv').config({ path: '/Users/lorenzocagliero/Desktop/Spring 25/IW04/BugHunt-1/.env' });
 const { Client } = require('pg');
 const OpenAI = require('openai');
