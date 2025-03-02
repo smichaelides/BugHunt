@@ -1,23 +1,35 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Hero.css';
 
 const Hero = () => {
+    const navigate = useNavigate();
     // HARDCODED DATA - will get from backend later !!!!
-    const debugUnits = ['Unit 1', 'Unit 2', 'Unit 3'];
+    const debugUnits = ['Level 1', 'Level 2', 'Level 3'];
     const userStats = {
         streak: 5,
         completedChallenges: 25,
         totalScore: 1250
     };
 
+    // Navigate to the level page when a debug unit is clicked (index + 1 because index starts at 0)
+    const handleLevelClick = (index) => {
+        navigate(`/level/${index + 1}`);
+    };
+
     return (
         <div className="hero-container">
             {/* Left sidebar with debug units */}
             <div className="debug-units-section">
-                <h2>Debug Units</h2>
+                <h2>Debug Levels</h2>
                 <div className="units-list">
                     {debugUnits.map((unit, index) => (
-                        <div key={index} className="unit-item">
+                        <div 
+                            key={index} 
+                            className="unit-item"
+                            onClick={() => handleLevelClick(index)}
+                            style={{ cursor: 'pointer' }}
+                        >
                             {unit}
                         </div>
                     ))}

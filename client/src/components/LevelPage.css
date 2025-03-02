@@ -1,0 +1,80 @@
+.level-page {
+    padding: 2rem;
+}
+
+.challenges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.challenge-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.challenge-card:hover {
+    transform: translateY(-5px);
+}
+
+.challenge-card h3 {
+    margin: 0 0 1rem 0;
+    color: #333;
+}
+
+.difficulty {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.difficulty.easy {
+    background: #e0f2e9;
+    color: #2da160;
+}
+
+.difficulty.medium {
+    background: #fff3e0;
+    color: #f9a825;
+}
+
+.difficulty.hard {
+    background: #fee8e7;
+    color: #d32f2f;
+}
+
+.start-challenge-btn {
+    width: 100%;
+    padding: 0.75rem;
+    margin-top: 1rem;
+    background: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.start-challenge-btn:hover {
+    background: #357abd;
+} 
+
+h1 {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+    font-family: 'Monaco', monospace;
+}
+
+h3 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    font-family: 'Monaco', monospace;
+}
