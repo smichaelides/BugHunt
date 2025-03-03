@@ -1,35 +1,78 @@
-// server/server.js
-
+require('dotenv').config();
 const express = require('express');
-const { Pool } = require('pg');
 const cors = require('cors');
+const { Pool } = require('pg');
 
 const app = express();
-app.use(cors()); // Allow cross-origin requests
-app.use(express.json()); // Parse JSON bodies
+const PORT = process.env.PORT || 5001;
 
-// PostgreSQL connection setup
+app.use(cors()); // Enable CORS
+app.use(express.json()); // Allow JSON body parsing
+
+// Database connection
 const pool = new Pool({
-    user: 'lorenzocagliero', // Your database username
-    host: 'localhost', // Assuming the database is on the same machine
-    database: 'burghunt_db', // Your database name
-    password: '', // No password
-    port: 5432, // Default PostgreSQL port
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT
 });
 
-// API endpoint to get questions
-app.get('/api/questions', async (req, res) => {
+// 🟢 API Endpoint: Get Problems as Multiple-Choice for a Level
+app.get('/problems/:level', async (req, res) => {
+    const level = req.params.level;
+
     try {
-        const result = await pool.query('SELECT * FROM problems'); // Replace 'questions' with your actual table name
-        res.json(result.rows);
-    } catch (error) {
-        console.error('Error fetching questions:', error);
-        res.status(500).send('Error fetching questions');
+        const query = `
+            SELECT p.ProblemID, p.Difficulty, p.Description, p.Code, p.CorrectSolution, p.WrongOption1, p.WrongOption2, p.WrongOption3
+            FROM problems p
+            JOIN challenges c ON p.ProblemID = c.ProblemID
+            WHERE c.Level = $1;
+        `;
+
+        const { rows } = await pool.query(query, [level]);
+
+        // Convert problems into multiple-choice format
+        const formattedProblems = rows.map(problem => {
+            const choices = [
+                problem.CorrectSolution,
+                problem.WrongOption1,
+                problem.WrongOption2,
+                problem.WrongOption3
+            ];
+
+            // Shuffle the answer choices randomly
+            choices.sort(() => Math.random() - 0.5);
+
+            return {
+                problemID: problem.ProblemID,
+                difficulty: problem.Difficulty,
+                description: problem.Description,
+                code: problem.Code,
+                choices: choices,  // Randomized choices
+                correctAnswer: problem.CorrectSolution
+            };
+        });
+
+        res.json(formattedProblems);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Server Error");
     }
 });
 
-// Start the server
-const PORT = process.env.PORT || 5001;
+// 🟢 API Endpoint: Get All Levels
+app.get('/levels', async (req, res) => {
+    try {
+        const query = `SELECT DISTINCT Level FROM challenges ORDER BY Level;`;
+        const { rows } = await pool.query(query);
+        res.json(rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Server Error");
+    }
+});
+
+// Start server
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
