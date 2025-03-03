@@ -16,65 +16,54 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
 
-const NUM_LEVELS = 3;  // Number of levels
-const PROBLEMS_PER_LEVEL = 5; // 5 problems per level
+const PROBLEMS_TO_GENERATE = 5;  // Generate 5 problems
+const LEVEL = 1;  // Assign all problems to Level 1
+const DIFFICULTY = "Easy";  // Difficulty level for all problems
 
-// Define difficulty distribution per level
-const difficultyDistribution = [
-    ["Easy", "Easy", "Easy", "Easy", "Easy"],   // Level 1
-    ["Easy", "Easy", "Easy", "Medium", "Medium"], // Level 2
-    ["Easy", "Easy", "Medium", "Medium", "Hard"], // Level 3
-    ["Easy", "Medium", "Medium", "Hard", "Hard"], // Level 4
-    ["Medium", "Medium", "Hard", "Hard", "Hard"], // Level 5
-    ["Medium", "Medium", "Medium", "Hard", "Hard"], // Level 6
-    ["Medium", "Hard", "Hard", "Hard", "Hard"],  // Level 7
-    ["Hard", "Hard", "Hard", "Hard", "Hard"],    // Level 8
-    ["Hard", "Hard", "Hard", "Hard", "Hard"],    // Level 9
-    ["Hard", "Hard", "Hard", "Hard", "Hard"]     // Level 10
-];
-
-// Function to generate debugging problems using GPT
-async function generateProblem(difficulty) {
+// Function to generate a debugging problem using GPT
+async function generateProblem() {
     try {
         const response = await openai.chat.completions.create({
             model: "gpt-4",
-            messages: [{ 
-                role: "user", 
-                content: `Generate a ${difficulty} Java debugging challenge for a coding game.
-
-Format:
+            messages: [{
+                role: "user",
+                content: `Generate a Java debugging challenge in the EXACT format below.
 
 ### Problem:
 Problem: [Brief problem statement]
+
 Buggy Code:
 \`\`\`java
 [buggy code]
 \`\`\`
+
 Fixed Code:
 \`\`\`java
 [corrected code]
 \`\`\`
 
-- The buggy code must contain **exactly one bug**.
-- The fixed code must be the **minimal necessary correction**.
-- Ensure the response is **concise and under 250 tokens**.` 
+DO NOT include explanations. The buggy code must have EXACTLY one bug, and the fixed code should be the minimal correction.`
             }],
-            max_tokens: 250
+            max_tokens: 300
         });
 
-        return response.choices[0].message.content;
+        return response.choices[0].message.content.trim();
     } catch (err) {
-        console.error("OpenAI API Error:", err);
+        console.error("❌ OpenAI API Error:", err);
         return null;
     }
 }
 
-// Function to extract problem data from GPT response
+// Function to extract problem data using a more flexible regex
 function extractProblemData(responseText) {
-    const match = responseText.match(/### Problem:\s*Problem:\s*(.*?)\nBuggy Code:\s*```java\n([\s\S]*?)\n```\nFixed Code:\s*```java\n([\s\S]*?)\n```/);
+    console.log("🔍 GPT Response:\n", responseText); // Debugging output
+
+    const match = responseText.match(
+        /Problem:\s*(.*?)\n+Buggy Code:\s*```java\n([\s\S]+?)\n```[\s\S]*?Fixed Code:\s*```java\n([\s\S]+?)\n```/
+    );
 
     if (!match || match.length !== 4) {
-        console.error("Error parsing problem data:", responseText);
+        console.error("❌ Error parsing problem data. Full response:\n", responseText);
         return null;
     }
 
@@ -88,61 +77,58 @@ function extractProblemData(responseText) {
 // Main function to populate the database
 async function populateDatabase() {
     await client.connect();
+    console.log(`🛠 Generating ${PROBLEMS_TO_GENERATE} ${DIFFICULTY} problems for Level ${LEVEL}...`);
 
-    for (let level = 1; level <= NUM_LEVELS; level++) {
-        console.log(`Generating problems for Level ${level}...`);
+    for (let i = 0; i < PROBLEMS_TO_GENERATE; i++) {
+        console.log(`📌 Generating problem ${i + 1}...`);
+        const problemResponse = await generateProblem();
 
-        for (let i = 0; i < PROBLEMS_PER_LEVEL; i++) {
-            const difficulty = difficultyDistribution[level - 1][i]; // Select difficulty based on level
+        if (!problemResponse) {
+            console.log(`⚠️ Skipping problem ${i + 1} due to API error.`);
+            continue;
+        }
 
-            console.log(`Generating ${difficulty} problem for Level ${level}...`);
-            const problemResponse = await generateProblem(difficulty);
-            if (!problemResponse) {
-                console.log(`Skipping problem ${i + 1} for Level ${level} due to API error.`);
-                continue;
-            }
+        const problemData = extractProblemData(problemResponse);
+        if (!problemData) {
+            console.log(`⚠️ Skipping problem ${i + 1} due to parsing error.`);
+            continue;
+        }
 
-            const problemData = extractProblemData(problemResponse);
-            if (!problemData) {
-                console.log(`Skipping problem ${i + 1} for Level ${level} due to parsing error.`);
-                continue;
-            }
+        // Insert into problems table
+        const query = `
+            INSERT INTO problems (Difficulty, Description, Code, CorrectSolution, WrongOption1, WrongOption2, WrongOption3)
+            VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING ProblemID;
+        `;
 
-            const query = `
-                INSERT INTO problems (Difficulty, Description, Code, CorrectSolution, WrongOption1, WrongOption2, WrongOption3)
-                VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING ProblemID;
+        const values = [
+            DIFFICULTY,
+            problemData.description,
+            problemData.buggyCode,
+            problemData.fixedCode,
+            "Wrong option 1", "Wrong option 2", "Wrong option 3"
+        ];
+
+        try {
+            const result = await client.query(query, values);
+            const problemID = result.rows[0].problemid;
+
+            console.log(`✅ Inserted ProblemID: ${problemID}`);
+
+            // Insert into challenges table
+            const challengeQuery = `
+                INSERT INTO challenges (Level, ProblemID) VALUES ($1, $2);
             `;
+            await client.query(challengeQuery, [LEVEL, problemID]);
 
-            const values = [
-                difficulty,
-                problemData.description,
-                problemData.buggyCode,
-                problemData.fixedCode,
-                "Wrong option 1", "Wrong option 2", "Wrong option 3"
-            ];
+            console.log(`🔗 Assigned ProblemID ${problemID} to Level ${LEVEL}`);
 
-            try {
-                const result = await client.query(query, values);
-                const problemID = result.rows[0].problemid;
-
-                console.log(`Inserted ${difficulty} problem with ProblemID: ${problemID} for Level ${level}`);
-
-                // Insert into challenges table
-                const challengeQuery = `
-                    INSERT INTO challenges (Level, ProblemID) VALUES ($1, $2);
-                `;
-                await client.query(challengeQuery, [level, problemID]);
-
-                console.log(`Assigned ProblemID ${problemID} to Level ${level}`);
-
-            } catch (err) {
-                console.error("Error inserting problem or challenge:", err);
-            }
+        } catch (err) {
+            console.error("❌ Error inserting problem or challenge:", err);
         }
     }
 
     await client.end();
-    console.log("Database population completed.");
+    console.log("🎯 Database population completed.");
 }
 
 // Run the script
