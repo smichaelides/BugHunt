@@ -1,10 +1,7 @@
-
-// script to populate the database with questions
-require('dotenv').config({ path: '/Users/lorenzocagliero/Desktop/Spring 25/IW04/BugHunt-1/.env' });
+require('dotenv').config({ path: '/Users/lorenzocagliero/Desktop/Spring25/IW04/BugHunt-1/.env' });
 const { Client } = require('pg');
 const OpenAI = require('openai');
 
-// Debug environment variables
 console.log("OPENAI_API_KEY:", process.env.OPENAI_API_KEY ? "Loaded" : "Not Found");
 
 const client = new Client({
@@ -19,20 +16,35 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
 
-const NUM_QUESTIONS_PER_DIFFICULTY = 5;
+const NUM_LEVELS = 3;  // Number of levels
+const PROBLEMS_PER_LEVEL = 5; // 5 problems per level
 
-// Function to generate debugging questions in one request for all three difficulty levels
-async function generateQuestions() {
+// Define difficulty distribution per level
+const difficultyDistribution = [
+    ["Easy", "Easy", "Easy", "Easy", "Easy"],   // Level 1
+    ["Easy", "Easy", "Easy", "Medium", "Medium"], // Level 2
+    ["Easy", "Easy", "Medium", "Medium", "Hard"], // Level 3
+    ["Easy", "Medium", "Medium", "Hard", "Hard"], // Level 4
+    ["Medium", "Medium", "Hard", "Hard", "Hard"], // Level 5
+    ["Medium", "Medium", "Medium", "Hard", "Hard"], // Level 6
+    ["Medium", "Hard", "Hard", "Hard", "Hard"],  // Level 7
+    ["Hard", "Hard", "Hard", "Hard", "Hard"],    // Level 8
+    ["Hard", "Hard", "Hard", "Hard", "Hard"],    // Level 9
+    ["Hard", "Hard", "Hard", "Hard", "Hard"]     // Level 10
+];
+
+// Function to generate debugging problems using GPT
+async function generateProblem(difficulty) {
     try {
         const response = await openai.chat.completions.create({
             model: "gpt-4",
             messages: [{ 
                 role: "user", 
-                content: `Generate three distinct Java debugging challenges, one for each of the following difficulty levels: Easy, Medium, and Hard.
+                content: `Generate a ${difficulty} Java debugging challenge for a coding game.
 
-Each challenge should be structured as follows:
+Format:
 
-### [Difficulty] Question:
+### Problem:
 Problem: [Brief problem statement]
 Buggy Code:
 \`\`\`java
@@ -43,11 +55,11 @@ Fixed Code:
 [corrected code]
 \`\`\`
 
-- Ensure each buggy code snippet has **exactly one bug**.
-- Provide the **minimal** necessary correction in the fixed code.
-- Ensure the total response length is **under 700 tokens**.` 
+- The buggy code must contain **exactly one bug**.
+- The fixed code must be the **minimal necessary correction**.
+- Ensure the response is **concise and under 250 tokens**.` 
             }],
-            max_tokens: 700
+            max_tokens: 250
         });
 
         return response.choices[0].message.content;
@@ -57,66 +69,81 @@ Fixed Code:
     }
 }
 
-// Function to extract and insert debugging challenges into the database
-async function insertQuestions() {
+// Function to extract problem data from GPT response
+function extractProblemData(responseText) {
+    const match = responseText.match(/### Problem:\s*Problem:\s*(.*?)\nBuggy Code:\s*```java\n([\s\S]*?)\n```\nFixed Code:\s*```java\n([\s\S]*?)\n```/);
+
+    if (!match || match.length !== 4) {
+        console.error("Error parsing problem data:", responseText);
+        return null;
+    }
+
+    return {
+        description: match[1].trim(),
+        buggyCode: match[2].trim(),
+        fixedCode: match[3].trim()
+    };
+}
+
+// Main function to populate the database
+async function populateDatabase() {
     await client.connect();
 
-    for (let i = 0; i < NUM_QUESTIONS_PER_DIFFICULTY; i++) {
-        console.log(`Generating batch ${i + 1} of questions...`);
+    for (let level = 1; level <= NUM_LEVELS; level++) {
+        console.log(`Generating problems for Level ${level}...`);
 
-        const questions = await generateQuestions();
-        if (!questions) {
-            console.log(`No questions generated in batch ${i + 1}.`);
-            continue;
-        }
+        for (let i = 0; i < PROBLEMS_PER_LEVEL; i++) {
+            const difficulty = difficultyDistribution[level - 1][i]; // Select difficulty based on level
 
-        // Extract questions using regex
-        const questionMatches = questions.match(/### (Easy|Medium|Hard) Question:\s*Problem:\s*(.*?)\nBuggy Code:\s*```java\n([\s\S]*?)\n```\nFixed Code:\s*```java\n([\s\S]*?)\n```/g);
-        if (!questionMatches || questionMatches.length !== 3) {
-            console.error(`Could not parse three questions for batch ${i + 1}.`);
-            console.log("Raw response:", questions); // Debugging
-            continue;
-        }
-
-        questionMatches.forEach(async (match) => {
-            const parts = match.match(/### (Easy|Medium|Hard) Question:\s*Problem:\s*(.*?)\nBuggy Code:\s*```java\n([\s\S]*?)\n```\nFixed Code:\s*```java\n([\s\S]*?)\n```/);
-
-            if (!parts || parts.length !== 5) {
-                console.error(`Invalid format for question in batch ${i + 1}`);
-                console.log("Raw match:", match); // Debugging
-                return;
+            console.log(`Generating ${difficulty} problem for Level ${level}...`);
+            const problemResponse = await generateProblem(difficulty);
+            if (!problemResponse) {
+                console.log(`Skipping problem ${i + 1} for Level ${level} due to API error.`);
+                continue;
             }
 
-            const difficulty = parts[1].trim();
-            const description = parts[2].trim();
-            const buggyCode = parts[3].trim();
-            const fixedCode = parts[4].trim();
+            const problemData = extractProblemData(problemResponse);
+            if (!problemData) {
+                console.log(`Skipping problem ${i + 1} for Level ${level} due to parsing error.`);
+                continue;
+            }
 
             const query = `
                 INSERT INTO problems (Difficulty, Description, Code, CorrectSolution, WrongOption1, WrongOption2, WrongOption3)
-                VALUES ($1, $2, $3, $4, $5, $6, $7);
+                VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING ProblemID;
             `;
 
             const values = [
-                difficulty,  
-                description,  
-                buggyCode,  
-                fixedCode,  
-                "Wrong option 1", "Wrong option 2", "Wrong option 3"  
+                difficulty,
+                problemData.description,
+                problemData.buggyCode,
+                problemData.fixedCode,
+                "Wrong option 1", "Wrong option 2", "Wrong option 3"
             ];
 
             try {
-                await client.query(query, values);
-                console.log(`Inserted ${difficulty} question:`, description);
+                const result = await client.query(query, values);
+                const problemID = result.rows[0].problemid;
+
+                console.log(`Inserted ${difficulty} problem with ProblemID: ${problemID} for Level ${level}`);
+
+                // Insert into challenges table
+                const challengeQuery = `
+                    INSERT INTO challenges (Level, ProblemID) VALUES ($1, $2);
+                `;
+                await client.query(challengeQuery, [level, problemID]);
+
+                console.log(`Assigned ProblemID ${problemID} to Level ${level}`);
+
             } catch (err) {
-                console.error("Error inserting question:", err);
+                console.error("Error inserting problem or challenge:", err);
             }
-        });
+        }
     }
 
     await client.end();
-    console.log("Database connection closed.");
+    console.log("Database population completed.");
 }
 
-// Run script
-insertQuestions();
+// Run the script
+populateDatabase();
