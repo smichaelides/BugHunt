@@ -17,43 +17,42 @@ const pool = new Pool({
     port: process.env.DB_PORT
 });
 
-// 🟢 API Endpoint: Get Problems as Multiple-Choice for a Level
-app.get('/problems/:level', async (req, res) => {
-    const level = req.params.level;
+// 🟢 API Endpoint: Get a Single Challenge by ID
+app.get('/challenge/:challengeID', async (req, res) => {
+    const challengeID = req.params.challengeID;
 
     try {
         const query = `
-            SELECT p.ProblemID, p.Difficulty, p.Description, p.Code, p.CorrectSolution, p.WrongOption1, p.WrongOption2, p.WrongOption3
+            SELECT p.ProblemID, p.Difficulty, p.Description, p.Code, 
+                   p.CorrectSolution, p.WrongOption1, p.WrongOption2, p.WrongOption3
             FROM problems p
             JOIN challenges c ON p.ProblemID = c.ProblemID
-            WHERE c.Level = $1;
+            WHERE c.ChallengeID = $1;
         `;
 
-        const { rows } = await pool.query(query, [level]);
+        const { rows } = await pool.query(query, [challengeID]);
 
-        // Convert problems into multiple-choice format
-        const formattedProblems = rows.map(problem => {
-            const choices = [
-                problem.CorrectSolution,
-                problem.WrongOption1,
-                problem.WrongOption2,
-                problem.WrongOption3
-            ];
+        if (rows.length === 0) {
+            return res.status(404).json({ error: "Challenge not found" });
+        }
 
-            // Shuffle the answer choices randomly
-            choices.sort(() => Math.random() - 0.5);
+        const problem = rows[0];
 
-            return {
-                problemID: problem.ProblemID,
-                difficulty: problem.Difficulty,
-                description: problem.Description,
-                code: problem.Code,
-                choices: choices,  // Randomized choices
-                correctAnswer: problem.CorrectSolution
-            };
+        // Shuffle answer choices
+        const answers = [
+            problem.CorrectSolution,
+            problem.WrongOption1,
+            problem.WrongOption2,
+            problem.WrongOption3
+        ].sort(() => Math.random() - 0.5);
+
+        res.json({
+            problemID: problem.ProblemID,
+            description: problem.Description,
+            code: problem.Code,
+            choices: answers,
+            correctAnswer: problem.CorrectSolution
         });
-
-        res.json(formattedProblems);
     } catch (err) {
         console.error(err);
         res.status(500).send("Server Error");
