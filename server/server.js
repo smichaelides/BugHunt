@@ -18,16 +18,14 @@ const pool = new Pool({
 });
 
 // 🟢 API Endpoint: Get a Single Challenge by ID
-app.get('/challenge/:challengeID', async (req, res) => {
+app.get('/problems/level/:level', async (req, res) => {
     const challengeID = req.params.challengeID;
 
     try {
         const query = `
-            SELECT p.ProblemID, p.Difficulty, p.Description, p.Code, 
-                   p.CorrectSolution, p.WrongOption1, p.WrongOption2, p.WrongOption3
-            FROM problems p
+            SELECT p.* FROM problems p
             JOIN challenges c ON p.ProblemID = c.ProblemID
-            WHERE c.ChallengeID = $1;
+            WHERE c.Level = $1;
         `;
 
         const { rows } = await pool.query(query, [challengeID]);
@@ -64,6 +62,30 @@ app.get('/levels', async (req, res) => {
     try {
         const query = `SELECT DISTINCT Level FROM challenges ORDER BY Level;`;
         const { rows } = await pool.query(query);
+        res.json(rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Server Error");
+    }
+});
+
+// 🟢 API Endpoint: Get Problems by Level
+app.get('/problems/level/:level', async (req, res) => {
+    const level = req.params.level;
+
+    try {
+        const query = `
+            SELECT p.* FROM problems p
+            JOIN challenges c ON p.ProblemID = c.ProblemID
+            WHERE c.Level = $1;
+        `;
+
+        const { rows } = await pool.query(query, [level]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: "No problems found for this level" });
+        }
+
         res.json(rows);
     } catch (err) {
         console.error(err);
