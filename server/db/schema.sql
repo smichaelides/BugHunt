@@ -26,4 +26,11 @@ CREATE TABLE users (
     ChallengesCompleted INT DEFAULT 0
 );
 
+CREATE TABLE challenges (
+    ChallengeID SERIAL PRIMARY KEY,
+    Level INT NOT NULL, -- Level number
+    ProblemID INT NOT NULL, -- References a problem
+    FOREIGN KEY (ProblemID) REFERENCES problems(ProblemID) ON DELETE CASCADE
+);
+
 
