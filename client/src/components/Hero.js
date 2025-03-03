@@ -5,16 +5,28 @@ import './Hero.css';
 const Hero = () => {
     const navigate = useNavigate();
     // HARDCODED DATA - will get from backend later !!!!
-    const debugUnits = ['Level 1', 'Level 2', 'Level 3'];
+    const levels = [
+        { id: 1, name: "Level 1", unlocked: true, completed: true },
+        { id: 2, name: "Level 2", unlocked: true, completed: false },
+        { id: 3, name: "Level 3", unlocked: false, completed: false },
+        { id: 4, name: "Level 4", unlocked: false, completed: false },
+        { id: 5, name: "Level 5", unlocked: false, completed: false },
+        { id: 6, name: "Level 6", unlocked: false, completed: false },
+        { id: 7, name: "Level 7", unlocked: false, completed: false },
+        { id: 8, name: "Level 8", unlocked: false, completed: false },
+        { id: 9, name: "Level 9", unlocked: false, completed: false },
+        { id: 10, name: "Level 10", unlocked: false, completed: false },
+    ];
     const userStats = {
         streak: 5,
         completedChallenges: 25,
         totalScore: 1250
     };
 
-    // Navigate to the level page when a debug unit is clicked (index + 1 because index starts at 0)
-    const handleLevelClick = (index) => {
-        navigate(`/level/${index + 1}`);
+    const handleLevelClick = (level) => {
+        if (level.unlocked) {
+            navigate(`/level/${level.id}`);
+        }
     };
 
     return (
@@ -23,14 +35,16 @@ const Hero = () => {
             <div className="debug-units-section">
                 <h2>Debug Levels</h2>
                 <div className="units-list">
-                    {debugUnits.map((unit, index) => (
+                    {levels.map((level) => (
                         <div 
-                            key={index} 
-                            className="unit-item"
-                            onClick={() => handleLevelClick(index)}
-                            style={{ cursor: 'pointer' }}
+                            key={level.id} 
+                            className={`unit-item ${level.unlocked ? 'unlocked' : 'locked'} ${level.completed ? 'completed' : ''}`}
+                            onClick={() => handleLevelClick(level)}
+                            style={{ cursor: level.unlocked ? 'pointer' : 'not-allowed' }}
                         >
-                            {unit}
+                            {level.name}
+                            {level.completed && ' ✓'}
+                            {!level.unlocked && ' 🔒'}
                         </div>
                     ))}
                 </div>
