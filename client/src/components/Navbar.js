@@ -1,8 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth0 } from '@auth0/auth0-react';
+import LoginButton from './LoginButton';
+import LogoutButton from './LogoutButton';
 import './Navbar.css';
 
 const Navbar = ({ toggleMenu }) => {
+    const { isAuthenticated } = useAuth0();
+
     return (
         <nav className='navbar' role='navigation'>
             <div className='navbar-brand'>BugHunt</div>
@@ -16,6 +21,7 @@ const Navbar = ({ toggleMenu }) => {
                 <Link className='nav-link' to='/levels'>Levels</Link>
                 <Link className='nav-link' to='/leaderboard'>Leaderboard</Link>
                 <Link className='nav-link' to='/profile'>Profile</Link>
+                {isAuthenticated ? <LogoutButton /> : <LoginButton />}
             </div>
         </nav>
     );

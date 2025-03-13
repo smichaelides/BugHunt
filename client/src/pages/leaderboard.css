@@ -1,10 +1,10 @@
-h2 {
-    color: #2563eb; /* Blue text for all h2 headers */
+h1 {
+    color: #2563eb;
     margin-bottom: 2rem;
     text-align: center;
     font-size: 2rem;
     font-family: 'Monaco', monospace;
-} 
+}
 
 .leaderboard-container {
     max-width: 800px;
@@ -15,87 +15,79 @@ h2 {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.leaderboard-item {
+.leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.leaderboard-header {
+    display: grid;
+    grid-template-columns: 100px 1fr 150px;
+    padding: 1rem;
     background-color: #f8fafc;
-    margin: 1rem 0;
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s ease;
-    display: flex;
-    align-items: flex-start;
-    gap: 1.5rem;
+    border-radius: 8px 8px 0 0;
+    font-weight: bold;
+    color: #2563eb;
+    font-family: 'Monaco', monospace;
 }
 
-.leaderboard-item:hover {
-    transform: translateY(-2px);
-    background-color: #e6f0ff;
+.leaderboard-row {
+    display: grid;
+    grid-template-columns: 100px 1fr 150px;
+    padding: 1rem;
+    border-top: 1px solid #e2e8f0;
+    transition: background-color 0.2s ease;
 }
 
-.rank-badge {
-    background-color: #2563eb;
-    color: white;
-    width: 2rem;
-    height: 2rem;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.leaderboard-row:hover {
+    background-color: #f8fafc;
+}
+
+.rank {
+    text-align: center;
+    font-weight: bold;
+    color: #2563eb;
+}
+
+.username {
+    color: #1e293b;
+    font-family: 'Monaco', monospace;
+}
+
+.points {
+    text-align: right;
+    color: #2563eb;
     font-weight: bold;
     font-family: 'Monaco', monospace;
 }
 
-.user-info {
-    flex-grow: 1;
+/* Style for top 3 ranks */
+.leaderboard-row:nth-child(1) {
+    background-color: #fef3c7;
 }
 
-.username {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #2563eb;
-    font-family: 'Monaco', monospace;
-    display: block;
-    margin-bottom: 0.75rem;
+.leaderboard-row:nth-child(2) {
+    background-color: #f1f5f9;
 }
 
-.user-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
-    margin-top: 0.5rem;
+.leaderboard-row:nth-child(3) {
+    background-color: #fef2f2;
 }
 
-.stat {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+.leaderboard-row:nth-child(1):hover,
+.leaderboard-row:nth-child(2):hover,
+.leaderboard-row:nth-child(3):hover {
+    filter: brightness(0.95);
 }
 
-.stat-label {
-    color: #64748b;
-    font-size: 0.9rem;
-}
-
-.stat-value {
-    color: #1e40af;
-    font-weight: 600;
-    font-family: 'Monaco', monospace;
-}
-
-.no-data {
+/* Loading and error states */
+.loading, .error {
     text-align: center;
     padding: 2rem;
     color: #64748b;
+    font-family: 'Monaco', monospace;
 }
 
-/* First place styling 
-.leaderboard-item:first-child {
-    background-color: #eff6ff;
-    border: 2px solid #2563eb;
+.error {
+    color: #dc2626;
 }
-
-.leaderboard-item:first-child .rank-badge {
-    background-color: gold;
-    font-size: 1.2rem;
-}
-    */

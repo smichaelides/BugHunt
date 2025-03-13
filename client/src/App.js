@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-dom';
 import './App.css';
 import Navbar from './components/Navbar';
@@ -8,11 +8,13 @@ import Home from './pages/home';
 import Levels from './pages/levels';
 import Leaderboard from './pages/leaderboard';
 import Profile from './pages/profile';
-import Hero from './components/Hero';
 import LevelPage from './components/LevelPage';
+import Login from './pages/login';
+import { useAuth0 } from "@auth0/auth0-react";
 
 function App() {
-  const [isOpen, setIsOpen] = useState(false); // tracks if navbar is open
+  const [isOpen, setIsOpen] = useState(false);
+  const { isAuthenticated, isLoading } = useAuth0();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -21,23 +23,37 @@ function App() {
   const hideMenu = () => {
     if (window.innerWidth < 768 && isOpen) {
       setIsOpen(false);
-      console.log('Resized');
     }
   };
   window.addEventListener('resize', hideMenu);
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <Router>
-      <Navbar toggleMenu={toggleMenu} />
-      <Dropdown isOpen={isOpen} toggleMenu={toggleMenu} />
+      {isAuthenticated && <Navbar toggleMenu={toggleMenu} />}
+      {isAuthenticated && <Dropdown isOpen={isOpen} toggleMenu={toggleMenu} />}
       <Routes>
-        <Route path='/home' element={<Home />} />
-        <Route path='/levels' element={<Levels />} />
-        <Route path='/leaderboard' element={<Leaderboard />} />
-        <Route path='/profile' element={<Profile />} />
-        <Route path='/' element={<Hero />} />
-        <Route path='/level/:levelId' element={<LevelPage />} />
-        <Route path='/' element={<Navigate to='/home' />} />
+        <Route path='/home' element={
+          isAuthenticated ? <Home /> : <Navigate to="/" />
+        } />
+        <Route path='/levels' element={
+          isAuthenticated ? <Levels /> : <Navigate to="/" />
+        } />
+        <Route path='/leaderboard' element={
+          isAuthenticated ? <Leaderboard /> : <Navigate to="/" />
+        } />
+        <Route path='/profile' element={
+          isAuthenticated ? <Profile /> : <Navigate to="/" />
+        } />
+        <Route path='/level/:levelId' element={
+          isAuthenticated ? <LevelPage /> : <Navigate to="/" />
+        } />
+        <Route path='/' element={
+          isAuthenticated ? <Navigate to="/home" /> : <Login />
+        } />
       </Routes>
       <Footer />
     </Router>

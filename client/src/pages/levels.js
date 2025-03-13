@@ -1,29 +1,49 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { fetchLevels, fetchUserProgress } from '../utils/api';
 import './levels.css';
 
 const Levels = () => {
     const navigate = useNavigate();
+    const [levels, setLevels] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     
-    // HARDCODED DATA - will get from backend later
-    const levels = [
-        { id: 1, name: "Level 1", unlocked: true, completed: true },
-        { id: 2, name: "Level 2", unlocked: true, completed: false },
-        { id: 3, name: "Level 3", unlocked: false, completed: false },
-        { id: 4, name: "Level 4", unlocked: false, completed: false },
-        { id: 5, name: "Level 5", unlocked: false, completed: false },
-        { id: 6, name: "Level 6", unlocked: false, completed: false },
-        { id: 7, name: "Level 7", unlocked: false, completed: false },
-        { id: 8, name: "Level 8", unlocked: false, completed: false },
-        { id: 9, name: "Level 9", unlocked: false, completed: false },
-        { id: 10, name: "Level 10", unlocked: false, completed: false },
-    ];
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [levelsData, progressData] = await Promise.all([
+                    fetchLevels(),
+                    fetchUserProgress(1) // hardcoded user ID for now
+                ]);
+                
+                // Add unlocked and completed status to each level
+                const levelsWithProgress = levelsData.map((level, index) => ({
+                    ...level,
+                    // Level 1 is always unlocked, other levels unlock if previous level is completed
+                    unlocked: index === 0 || progressData.completedLevels.includes(index),
+                    completed: progressData.completedLevels.includes(level.id)
+                }));
+                
+                setLevels(levelsWithProgress);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
 
     const handleLevelClick = (level) => {
         if (level.unlocked) {
             navigate(`/level/${level.id}`);
         }
     };
+
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>Error: {error}</div>;
 
     return (
         <div className="level-home-page">
@@ -39,12 +59,11 @@ const Levels = () => {
                                 {level.completed ? '✓' : level.id}
                             </div>
                             <div className="level-label">{level.name}</div>
-                            {level.unlocked ? 
-                                <div className="level-status">
-                                    {level.completed ? 'Completed' : 'Ready'}
-                                </div> :
-                                <div className="level-status locked">Locked</div>
-                            }
+                            <div className="level-description">{level.description}</div>
+                            <div className="level-status">
+                                {level.completed ? 'Completed' : 
+                                 level.unlocked ? 'Ready' : 'Locked'}
+                            </div>
                         </div>
                         {index < levels.length - 1 && (
                             <div className={`path-connector ${levels[index + 1].unlocked ? 'unlocked' : 'locked'}`} />

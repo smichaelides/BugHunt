@@ -1,63 +1,57 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { fetchLeaderboard } from '../utils/api';
 import './leaderboard.css';
 
 const Leaderboard = () => {
-    // HARDCODED DATA FOR NOW
-    const leaderboardData = [
-        {
-            username: 'John Doe',
-            score: 1000,
-            streak: 5,
-            completedChallenges: 25,
-            totalScore: 1250
-        },
-        {
-            username: 'Jane Smith',
-            score: 950,
-            streak: 3,
-            completedChallenges: 15,
-            totalScore: 1100
-        },
-        {
-            username: 'Alice Johnson',
-            score: 900,
-            streak: 4,
-            completedChallenges: 20,
-            totalScore: 1050
+    const [leaderboardData, setLeaderboardData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const loadLeaderboard = async () => {
+            try {
+                const data = await fetchLeaderboard();
+                setLeaderboardData(data);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadLeaderboard();
+    }, []);
+
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>Error: {error}</div>;
+
+    // Helper function to get medal emoji based on rank
+    const getMedal = (rank) => {
+        switch(rank) {
+            case 1: return '🥇';
+            case 2: return '🥈';
+            case 3: return '🥉';
+            default: return '';
         }
-    ];
+    };
 
     return (
         <div className="leaderboard-container">
-            <h2>Leaderboard</h2>
-            {leaderboardData.length === 0 ? (
-                <div className="no-data">
-                    <p>No data available</p>
+            <h1>Leaderboard</h1>
+            <div className="leaderboard-table">
+                <div className="leaderboard-header">
+                    <div className="rank">Position</div>
+                    <div className="username">Username</div>
+                    <div className="points">Points</div>
                 </div>
-            ) : (
-                leaderboardData.map((user, index) => (
-                    <div key={index} className="leaderboard-item">
-                        <div className="rank-badge">{index + 1}</div>
-                        <div className="user-info">
-                            <span className="username">{user.username}</span>
-                            <div className="user-stats">
-                                <div className="stat">
-                                    <span className="stat-label">🏆 Score:</span>
-                                    <span className="stat-value">{user.totalScore}</span>
-                                </div>
-                                <div className="stat">
-                                    <span className="stat-label">🔥 Streak:</span>
-                                    <span className="stat-value">{user.streak} days</span>
-                                </div>
-                                <div className="stat">
-                                    <span className="stat-label">✅ Completed:</span>
-                                    <span className="stat-value">{user.completedChallenges} challenges</span>
-                                </div>
-                            </div>
-                        </div>
+                {leaderboardData.map((entry) => (
+                    <div key={entry.userId} className="leaderboard-row">
+                        <div className="rank">{getMedal(entry.rank)}</div>
+                        <div className="username">{entry.username}</div>
+                        <div className="points">{entry.points}</div>
                     </div>
-                ))
-            )}
+                ))}
+            </div>
         </div>
     );
 };
