@@ -236,6 +236,94 @@ app.get('/problems/level/:level', async (req, res) => {
     }
 });
 
+// Add user endpoint - handles both new and existing users
+app.post('/api/auth/user', async (req, res) => {
+    console.log('POST request received at /api/auth/user');
+    console.log('Request body:', req.body);
+    
+    const { email, name, nickname } = req.body;
+    console.log('Extracted data:', { email, name, nickname });
+    
+    try {
+        // First check if user exists
+        console.log('Checking if user exists...');
+        let result = await pool.query(
+            'SELECT * FROM users WHERE email = $1',
+            [email]
+        );
+        console.log('User exists check result:', result.rows);
+
+        // If user doesn't exist, create new user
+        if (result.rows.length === 0) {
+            console.log('Creating new user...');
+            result = await pool.query(
+                `INSERT INTO users (username, email, name, streakcounter, points, challengescompleted) 
+                 VALUES ($1, $2, $3, 0, 0, 0) 
+                 RETURNING *`,
+                [nickname || name, email, name]
+            );
+            console.log('New user created:', result.rows[0]);
+            
+            // Initialize user_progress for new user
+            console.log('Initializing user progress...');
+            await pool.query(
+                `INSERT INTO user_progress (userid, completedlevels, unlockedlevels) 
+                 VALUES ($1, ARRAY[]::integer[], ARRAY[1]::integer[])`,
+                [result.rows[0].id]
+            );
+            console.log('User progress initialized');
+        } else {
+            console.log('User already exists');
+        }
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Detailed error in user creation:', {
+            message: error.message,
+            stack: error.stack,
+            code: error.code,
+            detail: error.detail
+        });
+        res.status(500).json({ error: 'Failed to manage user', details: error.message });
+    }
+});
+
+// Get user by email endpoint
+app.get('/api/auth/user/:email', async (req, res) => {
+    const email = req.params.email;
+    
+    try {
+        console.log('Attempting to fetch user with email:', email);
+        
+        // Log database connection info (without sensitive details)
+        console.log('Database connection check:', {
+            database: process.env.DB_NAME,
+            host: process.env.DB_HOST,
+            port: process.env.DB_PORT
+        });
+
+        const query = 'SELECT * FROM users WHERE email = $1';
+        console.log('Executing query:', query);
+        
+        const result = await pool.query(query, [email]);
+        console.log('Query result:', result.rows);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Detailed error:', {
+            message: error.message,
+            stack: error.stack,
+            code: error.code,
+            detail: error.detail
+        });
+        res.status(500).json({ error: 'Failed to fetch user', details: error.message });
+    }
+});
+
 // Start server
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
