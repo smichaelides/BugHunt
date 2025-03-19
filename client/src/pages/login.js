@@ -95,7 +95,7 @@ const Login = () => {
           className="login-button" 
           onClick={handleLoginClick}
         >
-          Login to Start
+          Login/Register to Start
         </button>
       </div>
     </div>
