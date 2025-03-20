@@ -10,7 +10,9 @@ import Leaderboard from './pages/leaderboard';
 import Profile from './pages/profile';
 import LevelPage from './components/LevelPage';
 import Login from './pages/login';
+import GamePage from './pages/GamePage';
 import { useAuth0 } from "@auth0/auth0-react";
+
 
 function App() {
   const [isOpen, setIsOpen] = useState(false);
@@ -51,6 +53,10 @@ function App() {
         <Route path='/level/:levelId' element={
           isAuthenticated ? <LevelPage /> : <Navigate to="/" />
         } />
+        <Route path='/level/:levelId/problem/:problemId' element={
+     isAuthenticated ? <GamePage /> : <Navigate to="/" />
+   } />
+        
         <Route path='/' element={
           isAuthenticated ? <Navigate to="/home" /> : <Login />
         } />

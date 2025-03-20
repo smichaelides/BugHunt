@@ -1,9 +1,11 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+
 import './LevelPage.css';
 
 const LevelPage = () => {
     const { levelId } = useParams();
+    const navigate = useNavigate();
     
     // HARDCODED CHALLENGES - will get from backend later
     const challenges = [
@@ -44,6 +46,10 @@ const LevelPage = () => {
         }
     ];
 
+    const handleChallengeClick = (challengeId) => {
+        navigate(`/level/${levelId}/problem/${challengeId}`);
+    };
+
     return (
         <div className="level-page">
             <h1>Level {levelId}</h1>
@@ -55,7 +61,10 @@ const LevelPage = () => {
                             {challenge.difficulty}
                         </span>
                         <p>{challenge.description}</p>
-                        <button className="start-challenge-btn">
+                        <button 
+                            className="start-challenge-btn"
+                            onClick={() => handleChallengeClick(challenge.id)}
+                        >
                             {challenge.completed ? "Review" : "Start Challenge"}
                         </button>
                     </div>
@@ -65,4 +74,4 @@ const LevelPage = () => {
     );
 };
 
-export default LevelPage; 
+export default LevelPage;
