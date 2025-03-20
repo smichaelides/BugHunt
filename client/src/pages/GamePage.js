@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './GamePage.css';
 
+// everything hardcoded
 const GamePage = () => {
     const { levelId } = useParams();
     const navigate = useNavigate();
