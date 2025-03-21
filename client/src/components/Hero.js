@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchLevels, fetchUserProfile, fetchUserProgress } from '../utils/api';
+import { useAuth0 } from "@auth0/auth0-react";
 import './Hero.css';
 
 const Hero = () => {
     const navigate = useNavigate();
+    const { user, isAuthenticated } = useAuth0();
     const [levels, setLevels] = useState([]);
     const [userStats, setUserStats] = useState({
         streak: 0,
@@ -17,67 +18,74 @@ const Hero = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [levelsData, progressData, userData] = await Promise.all([
-                    fetchLevels(),
-                    fetchUserProgress(1), // hardcoded user ID for now
-                    fetchUserProfile(1)
-                ]);
+                if (!isAuthenticated || !user?.email) {
+                    return;
+                }
+
+                // Fetch user data
+                const userResponse = await fetch(`http://localhost:5001/api/auth/user/${encodeURIComponent(user.email)}`);
+                if (!userResponse.ok) {
+                    throw new Error('Failed to fetch user data');
+                }
+                const userData = await userResponse.json();
+
+                // Fetch levels
+                const levelsResponse = await fetch('http://localhost:5001/api/levels');
+                if (!levelsResponse.ok) {
+                    throw new Error('Failed to fetch levels');
+                }
+                const levelsData = await levelsResponse.json();
                 
-                const levelsWithProgress = levelsData.map(level => ({
-                    ...level,
-                    unlocked: progressData.unlockedLevels.includes(level.id),
-                    completed: progressData.completedLevels.includes(level.id)
-                }));
-                
-                setLevels(levelsWithProgress);
+                setLevels(levelsData);
                 setUserStats({
-                    streak: userData.streakCounter,
-                    completedChallenges: userData.challengesCompleted,
-                    totalScore: userData.points
+                    streak: userData.streakcounter || 0,
+                    completedChallenges: userData.challengescompleted || 0,
+                    totalScore: userData.points || 0
                 });
+                setLoading(false);
             } catch (err) {
+                console.error('Error fetching data:', err);
                 setError(err.message);
-            } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, []);
+    }, [user, isAuthenticated]);
 
     const handleLevelClick = (level) => {
-        if (level.unlocked) {
-            navigate(`/level/${level.id}`);
-        }
+        navigate(`/level/${level.id}`);
     };
+
+    if (!isAuthenticated) {
+        return <div>Please log in to view your progress</div>;
+    }
 
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
 
     return (
         <div className="hero-container">
-            {/* Left sidebar with debug units */}
-            <div className="debug-units-section">
-                <h2>Debug Levels</h2>
-                <div className="units-list">
+            <div className="left-section">
+                <h1>Debug Quest</h1>
+                <p>Master debugging through interactive challenges</p>
+                <div className="levels-grid">
                     {levels.map((level) => (
-                        <div 
-                            key={level.id} 
-                            className={`unit-item ${level.unlocked ? 'unlocked' : 'locked'} ${level.completed ? 'completed' : ''}`}
+                        <div
+                            key={level.id}
+                            className="level-card"
                             onClick={() => handleLevelClick(level)}
-                            style={{ cursor: level.unlocked ? 'pointer' : 'not-allowed' }}
                         >
-                            {level.name}
-                            {level.completed && ' ✓'}
-                            {!level.unlocked && ' 🔒'}
+                            <h3>Level {level.id}</h3>
+                            <p>{level.description}</p>
                         </div>
                     ))}
                 </div>
             </div>
+
             <div className="right-sections">
-                {/* welcome and stats section */}
                 <div className="welcome-section">
-                    <h2>Welcome Back!</h2>
+                    <h2>Welcome Back{user?.name ? `, ${user.name}` : ''}!</h2>
                     <div className="stats-container">
                         <div className="stat-item">
                             <h3>🔥 Day Streak</h3>
@@ -94,7 +102,6 @@ const Hero = () => {
                     </div>
                 </div>
 
-                {/* Daily Pu Section */}
                 <div className="daily-puzzle-section">
                     <h2>Daily Puzzle</h2>
                     <div className="daily-puzzle-container">

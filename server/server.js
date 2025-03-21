@@ -361,15 +361,39 @@ app.post('/api/user/complete-challenge', async (req, res) => {
         }
 
         const user = userResult.rows[0];
+        const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
 
-        // Update user's challenges completed and points
+        // Calculate streak
+        let newStreak = user.streakcounter;
+        if (user.last_activity_date) {
+            const lastActivity = new Date(user.last_activity_date);
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            // If last activity was yesterday, increment streak
+            if (lastActivity.toISOString().split('T')[0] === yesterday.toISOString().split('T')[0]) {
+                newStreak += 1;
+            } 
+            // If last activity was before yesterday, reset streak to 1
+            else if (lastActivity.toISOString().split('T')[0] !== today) {
+                newStreak = 1;
+            }
+            // If last activity was today, keep current streak
+        } else {
+            // First ever activity
+            newStreak = 1;
+        }
+
+        // Update user's challenges completed, points, streak, and last activity date
         const updateResult = await pool.query(
             `UPDATE users 
              SET challengescompleted = challengescompleted + 1,
-                 points = points + 10
-             WHERE email = $1
+                 points = points + 10,
+                 streakcounter = $1,
+                 last_activity_date = $2
+             WHERE email = $3
              RETURNING *`,
-            [email]
+            [newStreak, today, email]
         );
 
         console.log('Updated user:', updateResult.rows[0]);
@@ -398,7 +422,7 @@ app.post('/api/users', async (req, res) => {
             return res.json(existingUser.rows[0]);
         }
 
-        // Create new user
+        // Create new user with initial values
         const result = await pool.query(
             `INSERT INTO users (email, username, streakcounter, points, challengescompleted) 
              VALUES ($1, $2, 0, 0, 0) 
