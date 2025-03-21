@@ -17,7 +17,7 @@ const openai = new OpenAI({
 });
 
 const PROBLEMS_PER_LEVEL = 5;  // 5 problems per level
-const TOTAL_LEVELS = 1;       // Total number of levels
+const TOTAL_LEVELS = 5;       // Total number of levels
 const DIFFICULTY_DISTRIBUTION = {
     easy: 2,
     medium: 1,
