@@ -54,8 +54,8 @@ function App() {
           isAuthenticated ? <LevelPage /> : <Navigate to="/" />
         } />
         <Route path='/level/:levelId/problem/:problemId' element={
-     isAuthenticated ? <GamePage /> : <Navigate to="/" />
-   } />
+          isAuthenticated ? <GamePage /> : <Navigate to="/" />
+        } />
         
         <Route path='/' element={
           isAuthenticated ? <Navigate to="/home" /> : <Login />

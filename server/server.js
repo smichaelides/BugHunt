@@ -13,8 +13,18 @@ app.use(express.json()); // Allow JSON body parsing
 const pool = new Pool({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
+    database: 'bughunt_db',  // Hardcode this for now
     port: process.env.DB_PORT
+});
+
+// Test database connection
+pool.connect((err, client, done) => {
+    if (err) {
+        console.error('Error connecting to the database:', err);
+    } else {
+        console.log('Successfully connected to database');
+        done();
+    }
 });
 
 // Mock Database Tables
@@ -160,79 +170,89 @@ app.get('/api/leaderboard', (req, res) => {
     res.json(sortedLeaderboard);
 });
 
-// 🟢 API Endpoint: Get a Single Challenge by ID
-app.get('/problems/level/:level', async (req, res) => {
-    const challengeID = req.params.challengeID;
-
+// Get problems for a specific level
+app.get('/api/level/:levelId/problems', async (req, res) => {
     try {
-        const query = `
-            SELECT p.* FROM problems p
-            JOIN challenges c ON p.ProblemID = c.ProblemID
-            WHERE c.Level = $1;
-        `;
-
-        const { rows } = await pool.query(query, [challengeID]);
-
-        if (rows.length === 0) {
-            return res.status(404).json({ error: "Challenge not found" });
+        const { levelId } = req.params;
+        console.log('Fetching problems for level:', levelId); // Debug log
+        
+        const result = await pool.query(
+            'SELECT * FROM problems WHERE Level = $1 ORDER BY ProblemID',
+            [levelId]
+        );
+        
+        console.log('Query result:', result.rows); // Debug log
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'No problems found for this level' });
         }
+        
+        const problems = result.rows.map(problem => ({
+            problemId: problem.problemid,
+            level: problem.level,
+            difficulty: problem.difficulty,
+            description: problem.description,
+            code: problem.code,
+            fixedCode: problem.correctsolution,
+            wrongOption1: problem.wrongoption1,
+            wrongOption2: problem.wrongoption2,
+            wrongOption3: problem.wrongoption3
+        }));
+        
+        res.json(problems);
+    } catch (err) {
+        console.error('Error fetching problems:', err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
 
-        const problem = rows[0];
-
-        // Shuffle answer choices
-        const answers = [
-            problem.CorrectSolution,
-            problem.WrongOption1,
-            problem.WrongOption2,
-            problem.WrongOption3
-        ].sort(() => Math.random() - 0.5);
-
-        res.json({
-            problemID: problem.ProblemID,
-            description: problem.Description,
-            code: problem.Code,
-            choices: answers,
-            correctAnswer: problem.CorrectSolution
+// Get a specific problem by ID
+app.get('/api/problems/:problemId', async (req, res) => {
+    try {
+        const { problemId } = req.params;
+        console.log('Attempting to fetch problem with ID:', problemId);
+        console.log('Database connection info:', {
+            database: process.env.DB_NAME,
+            host: process.env.DB_HOST,
+            port: process.env.DB_PORT
         });
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Server Error");
-    }
-});
 
-// 🟢 API Endpoint: Get All Levels
-app.get('/levels', async (req, res) => {
-    try {
-        const query = `SELECT DISTINCT Level FROM challenges ORDER BY Level;`;
-        const { rows } = await pool.query(query);
-        res.json(rows);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Server Error");
-    }
-});
-
-// 🟢 API Endpoint: Get Problems by Level
-app.get('/problems/level/:level', async (req, res) => {
-    const level = req.params.level;
-
-    try {
-        const query = `
-            SELECT p.* FROM problems p
-            JOIN challenges c ON p.ProblemID = c.ProblemID
-            WHERE c.Level = $1;
-        `;
-
-        const { rows } = await pool.query(query, [level]);
-
-        if (rows.length === 0) {
-            return res.status(404).json({ error: "No problems found for this level" });
+        const query = 'SELECT * FROM problems WHERE problemid = $1';
+        console.log('Executing query:', query, 'with params:', [problemId]);
+        
+        const result = await pool.query(query, [problemId]);
+        console.log('Raw query result:', result.rows);
+        
+        if (result.rows.length === 0) {
+            console.log('No problem found with ID:', problemId);
+            return res.status(404).json({ error: 'Problem not found' });
         }
-
-        res.json(rows);
+        
+        const problem = result.rows[0];
+        console.log('Found problem:', problem);
+        
+        const transformedProblem = {
+            problemId: problem.problemid,
+            level: problem.level,
+            difficulty: problem.difficulty,
+            description: problem.description,
+            code: problem.code,
+            fixedCode: problem.correctsolution,
+            wrongOption1: problem.wrongoption1,
+            wrongOption2: problem.wrongoption2,
+            wrongOption3: problem.wrongoption3
+        };
+        console.log('Transformed problem:', transformedProblem);
+        
+        res.json(transformedProblem);
     } catch (err) {
-        console.error(err);
-        res.status(500).send("Server Error");
+        console.error('Detailed error:', {
+            message: err.message,
+            stack: err.stack,
+            code: err.code,
+            detail: err.detail
+        });
+        res.status(500).json({ error: 'Server error', details: err.message });
     }
 });
 

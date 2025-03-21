@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS users CASCADE;
 -- Create Problems Table
 CREATE TABLE problems (
     ProblemID SERIAL PRIMARY KEY,
+    Level INT NOT NULL,
     Difficulty VARCHAR(50),
     Description TEXT,
     Code TEXT,
