@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth0 } from "@auth0/auth0-react";
 import './GamePage.css';
 
 const GamePage = () => {
     const { levelId, problemId } = useParams();
     const navigate = useNavigate();
+    const { user } = useAuth0();
     
     const [problem, setProblem] = useState(null);
     const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -33,7 +35,31 @@ const GamePage = () => {
         fetchProblem();
     }, [problemId]);
 
-    const handleSelectAnswer = (answer) => {
+    const updateUserProgress = async () => {
+        try {
+            const response = await fetch('http://localhost:5001/api/user/complete-challenge', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: user.email,
+                    problemId: problemId
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update progress');
+            }
+
+            const data = await response.json();
+            console.log('Progress updated:', data);
+        } catch (err) {
+            console.error('Error updating progress:', err);
+        }
+    };
+
+    const handleSelectAnswer = async (answer) => {
         setSelectedAnswer(answer);
         
         // Check if answer is correct
@@ -42,6 +68,8 @@ const GamePage = () => {
                 type: 'success',
                 message: 'Correct! Well done!'
             });
+            // Update user progress when answer is correct
+            await updateUserProgress();
         } else {
             setFeedback({
                 type: 'error',

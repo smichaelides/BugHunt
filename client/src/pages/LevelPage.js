@@ -76,8 +76,8 @@ const LevelPage = () => {
 
             <div className="problem-preview">
                 <h2>Problem {currentProblem}</h2>
-                <p className="difficulty">{problems[currentProblem - 1]?.Difficulty}</p>
-                <p className="description">{problems[currentProblem - 1]?.Description}</p>
+                <p className="difficulty">{problems[currentProblem - 1]?.difficulty}</p>
+                <p className="description">{problems[currentProblem - 1]?.description}</p>
             </div>
 
             <button 

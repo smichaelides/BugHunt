@@ -344,6 +344,76 @@ app.get('/api/auth/user/:email', async (req, res) => {
     }
 });
 
+// Update user progress when challenge is completed
+app.post('/api/user/complete-challenge', async (req, res) => {
+    try {
+        const { email, problemId } = req.body;
+        console.log('Updating progress for user:', email, 'problem:', problemId);
+
+        // First get the user
+        const userResult = await pool.query(
+            'SELECT * FROM users WHERE email = $1',
+            [email]
+        );
+
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const user = userResult.rows[0];
+
+        // Update user's challenges completed and points
+        const updateResult = await pool.query(
+            `UPDATE users 
+             SET challengescompleted = challengescompleted + 1,
+                 points = points + 10
+             WHERE email = $1
+             RETURNING *`,
+            [email]
+        );
+
+        console.log('Updated user:', updateResult.rows[0]);
+        res.json(updateResult.rows[0]);
+    } catch (err) {
+        console.error('Error updating user progress:', err);
+        res.status(500).json({ error: 'Server error', details: err.message });
+    }
+});
+
+// User management endpoints
+app.post('/api/users', async (req, res) => {
+    try {
+        const { email, name, sub } = req.body;
+        console.log('Creating/updating user:', { email, name, sub });
+
+        // Check if user already exists
+        const existingUser = await pool.query(
+            'SELECT * FROM users WHERE email = $1',
+            [email]
+        );
+
+        if (existingUser.rows.length > 0) {
+            // User exists, return existing user
+            console.log('User already exists:', existingUser.rows[0]);
+            return res.json(existingUser.rows[0]);
+        }
+
+        // Create new user
+        const result = await pool.query(
+            `INSERT INTO users (email, username, streakcounter, points, challengescompleted) 
+             VALUES ($1, $2, 0, 0, 0) 
+             RETURNING *`,
+            [email, name]
+        );
+
+        console.log('Created new user:', result.rows[0]);
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error('Error managing user:', err);
+        res.status(500).json({ error: 'Server error', details: err.message });
+    }
+});
+
 // Start server
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);

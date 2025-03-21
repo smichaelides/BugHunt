@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-dom';
 import './App.css';
 import Navbar from './components/Navbar';
@@ -13,10 +13,40 @@ import Login from './pages/login';
 import GamePage from './pages/GamePage';
 import { useAuth0 } from "@auth0/auth0-react";
 
-
 function App() {
   const [isOpen, setIsOpen] = useState(false);
-  const { isAuthenticated, isLoading } = useAuth0();
+  const { isAuthenticated, isLoading, user } = useAuth0();
+
+  useEffect(() => {
+    const createOrUpdateUser = async () => {
+      if (isAuthenticated && user) {
+        try {
+          const response = await fetch('http://localhost:5001/api/users', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: user.email,
+              name: user.name,
+              sub: user.sub
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to create/update user');
+          }
+
+          const data = await response.json();
+          console.log('User created/updated:', data);
+        } catch (err) {
+          console.error('Error creating/updating user:', err);
+        }
+      }
+    };
+
+    createOrUpdateUser();
+  }, [isAuthenticated, user]);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
