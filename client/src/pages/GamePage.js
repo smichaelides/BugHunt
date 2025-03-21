@@ -13,6 +13,7 @@ const GamePage = () => {
     const [feedback, setFeedback] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [shuffledAnswers, setShuffledAnswers] = useState([]);
 
     useEffect(() => {
         const fetchProblem = async () => {
@@ -22,11 +23,21 @@ const GamePage = () => {
                     throw new Error('Problem not found');
                 }
                 const data = await response.json();
-                console.log('Fetched problem data:', data); // Debug log
+                console.log('Fetched problem data:', data);
                 setProblem(data);
+                
+                // Shuffle answers once when problem is loaded
+                const answers = [
+                    { text: data.fixedCode, isCorrect: true },
+                    { text: data.wrongOption1, isCorrect: false },
+                    { text: data.wrongOption2, isCorrect: false },
+                    { text: data.wrongOption3, isCorrect: false }
+                ].sort(() => Math.random() - 0.5);
+                setShuffledAnswers(answers);
+                
                 setLoading(false);
             } catch (err) {
-                console.error('Error fetching problem:', err); // Debug log
+                console.error('Error fetching problem:', err);
                 setError(err.message);
                 setLoading(false);
             }
@@ -90,14 +101,6 @@ const GamePage = () => {
         return <div className="game-page">Error: {error}</div>;
     }
 
-    // Shuffle the answer options
-    const answerOptions = [
-        { text: problem.fixedCode, isCorrect: true },
-        { text: problem.wrongOption1, isCorrect: false },
-        { text: problem.wrongOption2, isCorrect: false },
-        { text: problem.wrongOption3, isCorrect: false }
-    ].sort(() => Math.random() - 0.5);
-    
     return (
         <div className="game-page">
             <div className="game-header">
@@ -122,7 +125,7 @@ const GamePage = () => {
             <div className="answer-section">
                 <h3>Select the correct solution:</h3>
                 <div className="answer-bubbles">
-                    {answerOptions.map((option, index) => (
+                    {shuffledAnswers.map((option, index) => (
                         <div 
                             key={index}
                             className={`answer-bubble ${selectedAnswer === option.text ? 
