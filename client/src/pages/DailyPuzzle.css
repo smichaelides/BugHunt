@@ -1,0 +1,204 @@
+.daily-puzzle-page {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.daily-puzzle-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.daily-puzzle-header h1 {
+    font-size: 2rem;
+    margin: 0;
+    color: #333;
+    text-align: center;
+    flex-grow: 1;
+}
+
+.back-button {
+    background-color: transparent;
+    border: none;
+    color: #4a6ee0;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    transition: color 0.2s;
+}
+
+.back-button:hover {
+    color: #2c4aa0;
+}
+
+.reset-counter {
+    font-size: 0.9rem;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.time-remaining {
+    font-weight: bold;
+    color: #4a6ee0;
+    font-family: monospace;
+}
+
+.puzzle-difficulty {
+    display: inline-block;
+    padding: 0.3rem 1rem;
+    background-color: #e74c3c;
+    color: white;
+    border-radius: 20px;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.puzzle-description {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.code-display {
+    margin-bottom: 2rem;
+}
+
+.code-display h3 {
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.code-display pre {
+    background-color: #1e1e1e;
+    color: #fff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    max-height: 300px;
+    font-family: 'Courier New', monospace;
+}
+
+.answer-section h3 {
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.answer-bubbles {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.answer-bubble {
+    background-color: #f8f9fa;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.answer-bubble:hover {
+    background-color: #edf2f7;
+}
+
+.answer-bubble pre {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-x: auto;
+    max-height: 150px;
+    font-family: 'Courier New', monospace;
+}
+
+.answer-bubble.correct {
+    background-color: rgba(72, 187, 120, 0.1);
+    border-color: #48bb78;
+}
+
+.answer-bubble.incorrect {
+    background-color: rgba(229, 62, 62, 0.1);
+    border-color: #e53e3e;
+}
+
+.feedback {
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+.feedback.success {
+    background-color: rgba(72, 187, 120, 0.1);
+    border: 1px solid #48bb78;
+    color: #2f855a;
+}
+
+.feedback.error {
+    background-color: rgba(229, 62, 62, 0.1);
+    border: 1px solid #e53e3e;
+    color: #c53030;
+}
+
+.stats-update {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(72, 187, 120, 0.3);
+}
+
+.stats-update h4 {
+    margin-bottom: 0.5rem;
+}
+
+.loading-spinner, .error-message {
+    text-align: center;
+    padding: 3rem;
+    font-size: 1.2rem;
+    color: #666;
+}
+
+.error-message {
+    color: #e53e3e;
+}
+
+.completed-message {
+    text-align: center;
+    padding: 3rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin: 2rem 0;
+}
+
+.completed-message h2 {
+    color: #4a6ee0;
+    margin-bottom: 1rem;
+}
+
+.completed-message p {
+    color: #666;
+    margin-bottom: 1.5rem;
+}
+
+.completed-message .back-button {
+    display: inline-block;
+    padding: 0.8rem 1.5rem;
+    background-color: #4a6ee0;
+    color: white;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.completed-message .back-button:hover {
+    background-color: #2c4aa0;
+    color: white;
+} 

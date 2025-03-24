@@ -11,6 +11,7 @@ import Profile from './pages/profile';
 import LevelPage from './components/LevelPage';
 import Login from './pages/login';
 import GamePage from './pages/GamePage';
+import DailyPuzzle from './pages/DailyPuzzle';
 import { useAuth0 } from "@auth0/auth0-react";
 
 function App() {
@@ -79,6 +80,9 @@ function App() {
         } />
         <Route path='/profile' element={
           isAuthenticated ? <Profile /> : <Navigate to="/" />
+        } />
+        <Route path='/daily-puzzle' element={
+          isAuthenticated ? <DailyPuzzle /> : <Navigate to="/" />
         } />
         <Route path='/level/:levelId' element={
           isAuthenticated ? <LevelPage /> : <Navigate to="/" />

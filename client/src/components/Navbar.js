@@ -19,6 +19,7 @@ const Navbar = ({ toggleMenu }) => {
             <div className='nav-links'>
                 <Link className='nav-link' to='/home'>Home</Link>
                 <Link className='nav-link' to='/levels'>Levels</Link>
+                <Link className='nav-link' to='/daily-puzzle'>Daily Puzzle</Link>
                 <Link className='nav-link' to='/leaderboard'>Leaderboard</Link>
                 <Link className='nav-link' to='/profile'>Profile</Link>
                 {isAuthenticated ? <LogoutButton /> : <LoginButton />}
