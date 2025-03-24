@@ -12,7 +12,9 @@ const Leaderboard = () => {
             try {
                 const data = await fetchLeaderboard();
                 setLeaderboardData(data);
+                console.log('Leaderboard data:', data);
             } catch (err) {
+                console.error('Error loading leaderboard:', err);
                 setError(err.message);
             } finally {
                 setLoading(false);
@@ -22,8 +24,8 @@ const Leaderboard = () => {
         loadLeaderboard();
     }, []);
 
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div>Error: {error}</div>;
+    if (loading) return <div className="loading-container">Loading leaderboard data...</div>;
+    if (error) return <div className="error-container">Error: {error}</div>;
 
     // Helper function to get medal emoji based on rank
     const getMedal = (rank) => {
@@ -31,26 +33,40 @@ const Leaderboard = () => {
             case 1: return '🥇';
             case 2: return '🥈';
             case 3: return '🥉';
-            default: return '';
+            default: return rank;
         }
     };
 
     return (
         <div className="leaderboard-container">
             <h1>Leaderboard</h1>
+            <p className="leaderboard-subtitle">Top Bug Hunters</p>
+            
             <div className="leaderboard-table">
                 <div className="leaderboard-header">
                     <div className="rank">Position</div>
                     <div className="username">Username</div>
                     <div className="points">Points</div>
+                    <div className="challenges">Challenges</div>
+                    <div className="streak">Streak</div>
                 </div>
-                {leaderboardData.map((entry) => (
-                    <div key={entry.userId} className="leaderboard-row">
-                        <div className="rank">{getMedal(entry.rank)}</div>
-                        <div className="username">{entry.username}</div>
-                        <div className="points">{entry.points}</div>
-                    </div>
-                ))}
+                
+                {leaderboardData.length === 0 ? (
+                    <div className="no-data">No users found. Be the first to join the leaderboard!</div>
+                ) : (
+                    leaderboardData.map((entry) => (
+                        <div 
+                            key={entry.rank} 
+                            className={`leaderboard-row ${entry.rank <= 3 ? 'top-rank rank-' + entry.rank : ''}`}
+                        >
+                            <div className="rank">{getMedal(entry.rank)}</div>
+                            <div className="username">{entry.username}</div>
+                            <div className="points">{entry.points}</div>
+                            <div className="challenges">{entry.challengesCompleted || 0}</div>
+                            <div className="streak">{entry.streak || 0} days</div>
+                        </div>
+                    ))
+                )}
             </div>
         </div>
     );

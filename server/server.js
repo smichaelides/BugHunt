@@ -164,23 +164,37 @@ app.get('/api/level/:levelId/challenges', (req, res) => {
     res.json(challenges);
 });
 
-// Get Leaderboard
-app.get('/api/leaderboard', (req, res) => {
-    // Create leaderboard from users array
-    const sortedLeaderboard = mockDB.users
-        .map(user => ({
-            userId: user.id,
+// Get leaderboard data (users sorted by points)
+app.get('/api/leaderboard', async (req, res) => {
+    try {
+        console.log('Fetching leaderboard data');
+        
+        const query = `
+            SELECT username, email, points, challengescompleted, streakcounter 
+            FROM public.users 
+            ORDER BY points DESC 
+            LIMIT 10
+        `;
+        
+        console.log('Executing query:', query);
+        
+        const result = await pool.query(query);
+        console.log(`Found ${result.rows.length} users for leaderboard`);
+        
+        // Transform the data to hide sensitive information and format for display
+        const leaderboardData = result.rows.map((user, index) => ({
+            rank: index + 1,
             username: user.username,
-            points: user.points
-        }))
-        .sort((a, b) => b.points - a.points) // Sort by points (highest first)
-        .slice(0, 3) // Get only top 3
-        .map((entry, index) => ({
-            ...entry,
-            rank: index + 1 // Add rank based on sorted position
+            points: user.points,
+            challengesCompleted: user.challengescompleted,
+            streak: user.streakcounter
         }));
-
-    res.json(sortedLeaderboard);
+        
+        res.json(leaderboardData);
+    } catch (error) {
+        console.error('Error fetching leaderboard:', error);
+        res.status(500).json({ error: 'Server error', details: error.message });
+    }
 });
 
 // Get problems for a specific level
