@@ -11,10 +11,14 @@ app.use(express.json()); // Allow JSON body parsing
 
 // Database connection
 const pool = new Pool({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: 'bughunt_db',  // Hardcode this for now
-    port: process.env.DB_PORT
+    user: process.env.DB_USER || 'neondb_owner',
+    host: process.env.DB_HOST || 'ep-still-resonance-a5g96qo7-pooler.us-east-2.aws.neon.tech',
+    database: process.env.DB_NAME || 'neonBugHunt',
+    password: process.env.DB_PASSWORD || 'npg_j0NZc7wLfWzk',
+    port: process.env.DB_PORT || 5432,
+    ssl: {
+        rejectUnauthorized: false // Required for Neon connection
+    }
 });
 
 // Test database connection
@@ -177,7 +181,7 @@ app.get('/api/level/:levelId/problems', async (req, res) => {
         console.log('Fetching problems for level:', levelId); // Debug log
         
         const result = await pool.query(
-            'SELECT * FROM problems WHERE Level = $1 ORDER BY ProblemID',
+            'SELECT * FROM public.problems WHERE Level = $1 ORDER BY ProblemID',
             [levelId]
         );
         
@@ -217,7 +221,7 @@ app.get('/api/problems/:problemId', async (req, res) => {
             port: process.env.DB_PORT
         });
 
-        const query = 'SELECT * FROM problems WHERE problemid = $1';
+        const query = 'SELECT * FROM public.problems WHERE problemid = $1';
         console.log('Executing query:', query, 'with params:', [problemId]);
         
         const result = await pool.query(query, [problemId]);
@@ -268,7 +272,7 @@ app.post('/api/auth/user', async (req, res) => {
         // First check if user exists
         console.log('Checking if user exists...');
         let result = await pool.query(
-            'SELECT * FROM users WHERE email = $1',
+            'SELECT * FROM public.users WHERE email = $1',
             [email]
         );
         console.log('User exists check result:', result.rows);
@@ -277,7 +281,7 @@ app.post('/api/auth/user', async (req, res) => {
         if (result.rows.length === 0) {
             console.log('Creating new user...');
             result = await pool.query(
-                `INSERT INTO users (username, email, name, streakcounter, points, challengescompleted) 
+                `INSERT INTO public.users (username, email, name, streakcounter, points, challengescompleted) 
                  VALUES ($1, $2, $3, 0, 0, 0) 
                  RETURNING *`,
                 [nickname || name, email, name]
@@ -287,7 +291,7 @@ app.post('/api/auth/user', async (req, res) => {
             // Initialize user_progress for new user
             console.log('Initializing user progress...');
             await pool.query(
-                `INSERT INTO user_progress (userid, completedlevels, unlockedlevels) 
+                `INSERT INTO public.user_progress (userid, completedlevels, unlockedlevels) 
                  VALUES ($1, ARRAY[]::integer[], ARRAY[1]::integer[])`,
                 [result.rows[0].id]
             );
@@ -322,7 +326,7 @@ app.get('/api/auth/user/:email', async (req, res) => {
             port: process.env.DB_PORT
         });
 
-        const query = 'SELECT * FROM users WHERE email = $1';
+        const query = 'SELECT * FROM public.users WHERE email = $1';
         console.log('Executing query:', query);
         
         const result = await pool.query(query, [email]);
@@ -352,7 +356,7 @@ app.post('/api/user/complete-challenge', async (req, res) => {
 
         // First get the user
         const userResult = await pool.query(
-            'SELECT * FROM users WHERE email = $1',
+            'SELECT * FROM public.users WHERE email = $1',
             [email]
         );
 
@@ -386,7 +390,7 @@ app.post('/api/user/complete-challenge', async (req, res) => {
 
         // Update user's challenges completed, points, streak, and last activity date
         const updateResult = await pool.query(
-            `UPDATE users 
+            `UPDATE public.users 
              SET challengescompleted = challengescompleted + 1,
                  points = points + 10,
                  streakcounter = $1,
@@ -412,7 +416,7 @@ app.post('/api/users', async (req, res) => {
 
         // Check if user already exists
         const existingUser = await pool.query(
-            'SELECT * FROM users WHERE email = $1',
+            'SELECT * FROM public.users WHERE email = $1',
             [email]
         );
 
@@ -424,7 +428,7 @@ app.post('/api/users', async (req, res) => {
 
         // Create new user with initial values
         const result = await pool.query(
-            `INSERT INTO users (email, username, streakcounter, points, challengescompleted) 
+            `INSERT INTO public.users (email, username, streakcounter, points, challengescompleted) 
              VALUES ($1, $2, 0, 0, 0) 
              RETURNING *`,
             [email, name]
