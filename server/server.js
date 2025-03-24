@@ -1,10 +1,19 @@
-require('dotenv').config();
+// Load environment variables from .env file
+require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
+
+// For debugging
+console.log('Environment variables loaded:');
+console.log('DB_USER:', process.env.DB_USER ? 'Found' : 'Not found');
+console.log('DB_HOST:', process.env.DB_HOST ? 'Found' : 'Not found');
+console.log('DB_NAME:', process.env.DB_NAME ? 'Found' : 'Not found');
+console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? 'Found (not showing value)' : 'Not found');
+console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'Found (not showing value)' : 'Not found');
 
 app.use(cors()); // Enable CORS
 app.use(express.json()); // Allow JSON body parsing
@@ -321,9 +330,9 @@ app.get('/api/auth/user/:email', async (req, res) => {
         
         // Log database connection info (without sensitive details)
         console.log('Database connection check:', {
-            database: process.env.DB_NAME,
-            host: process.env.DB_HOST,
-            port: process.env.DB_PORT
+            database: pool.options.database,
+            host: pool.options.host,
+            port: pool.options.port
         });
 
         const query = 'SELECT * FROM public.users WHERE email = $1';
