@@ -9,7 +9,7 @@ const client = new Client({
   }
 });
 
-async function updateDailyPuzzle() {
+async function resetDailyPuzzle() {
   try {
     await client.connect();
     console.log('Connected to the database');
@@ -17,71 +17,54 @@ async function updateDailyPuzzle() {
     // Get the current date
     const currentDate = new Date();
     const today = currentDate.toISOString().split('T')[0];
-    console.log(`Running update for today: ${today}`);
+    console.log(`Running reset for today: ${today}`);
 
     // Start a transaction
     await client.query('BEGIN');
 
-    // Check if today's puzzle already exists and is valid
-    const todayCheck = await client.query(`
-      SELECT * FROM public.active_daily_puzzle 
-      WHERE ActivationDate::date <= CURRENT_DATE
-      AND ExpirationDate::date > CURRENT_DATE
-    `);
-
-    if (todayCheck.rows.length > 0) {
-      console.log(`Daily puzzle for today (${today}) already exists: Puzzle ID ${todayCheck.rows[0].puzzleid}`);
-      await client.query('COMMIT');
-      return;
-    }
-
-    // There's no puzzle for today, so let's deactivate any old puzzles first
-    console.log('No active puzzle for today, checking for any expired puzzles to clean up');
+    // 1. Clear all active daily puzzles
+    console.log('Truncating active_daily_puzzle table...');
+    await client.query('TRUNCATE TABLE public.active_daily_puzzle CASCADE');
     
-    // Expire any active puzzles that should be over
+    // 2. Clear completed puzzles for today
+    console.log('Removing completion records for today...');
     await client.query(`
-      UPDATE public.active_daily_puzzle
-      SET ExpirationDate = LEAST(ExpirationDate, CURRENT_DATE)
-      WHERE ExpirationDate::date > CURRENT_DATE
-      AND ActivationDate::date < CURRENT_DATE
+      DELETE FROM public.daily_puzzle_completions 
+      WHERE CompletionDate::date = CURRENT_DATE
     `);
-
-    // Get a random unused puzzle
+    
+    // 3. Get a random unused puzzle
     const puzzleQuery = await client.query(`
       SELECT PuzzleID FROM public.daily_puzzles 
-      WHERE IsUsed = false 
+      WHERE IsUsed = false OR (LastUsedDate IS NOT NULL AND LastUsedDate < CURRENT_DATE - INTERVAL '14 days')
       ORDER BY RANDOM() 
       LIMIT 1
     `);
 
     if (puzzleQuery.rows.length === 0) {
-      console.log('No unused puzzles available. Resetting puzzles older than 30 days...');
+      console.log('No suitable puzzles available. Resetting all puzzles...');
       
-      // Reset puzzles that haven't been used recently
+      // Reset all puzzles
       await client.query(`
         UPDATE public.daily_puzzles
         SET IsUsed = false, LastUsedDate = NULL
-        WHERE IsUsed = true 
-        AND (LastUsedDate IS NULL OR LastUsedDate < (CURRENT_DATE - INTERVAL '30 days'))
       `);
       
       // Try again to get a puzzle
       const retryQuery = await client.query(`
         SELECT PuzzleID FROM public.daily_puzzles 
-        WHERE IsUsed = false 
         ORDER BY RANDOM() 
         LIMIT 1
       `);
       
       if (retryQuery.rows.length === 0) {
-        console.log('Still no puzzles available after reset. Manual intervention needed.');
+        console.log('No puzzles available at all. Manual intervention needed.');
         await client.query('ROLLBACK');
         return;
       }
       
-      // Set the new puzzle as active
       const puzzleId = retryQuery.rows[0].puzzleid;
-      console.log(`Selected puzzle ${puzzleId} after resetting old puzzles`);
+      console.log(`Selected puzzle ${puzzleId} after full reset`);
       
       // Calculate tomorrow's date for expiration
       const tomorrow = new Date(currentDate);
@@ -89,6 +72,7 @@ async function updateDailyPuzzle() {
       tomorrow.setHours(0, 0, 0, 0);
       const tomorrowStr = tomorrow.toISOString().split('T')[0];
       
+      // Set the new puzzle as active
       await client.query(`
         INSERT INTO public.active_daily_puzzle (PuzzleID, ActivationDate, ExpirationDate)
         VALUES ($1, $2, $3)
@@ -128,15 +112,15 @@ async function updateDailyPuzzle() {
 
     // Commit the transaction
     await client.query('COMMIT');
-    console.log('Daily puzzle updated successfully');
+    console.log('Daily puzzle reset and updated successfully');
   } catch (error) {
     await client.query('ROLLBACK').catch(console.error);
-    console.error('Error updating daily puzzle:', error);
+    console.error('Error resetting daily puzzle:', error);
   } finally {
     await client.end();
     console.log('Disconnected from the database');
   }
 }
 
-// Run the update function
-updateDailyPuzzle().catch(console.error); 
+// Run the reset function
+resetDailyPuzzle().catch(console.error); 

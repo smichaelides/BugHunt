@@ -470,22 +470,77 @@ app.get('/api/daily-puzzle', async (req, res) => {
     try {
         console.log('Fetching today\'s daily puzzle');
         
-        // Get the active puzzle for today
+        // Get the current date
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set to start of day for comparison
+        console.log('Current date for puzzle lookup:', today.toISOString());
+        
+        // Get the active puzzle for today using date-based comparison
         const activeQuery = `
             SELECT adp.PuzzleID, adp.ActivationDate, adp.ExpirationDate, 
                    dp.Difficulty, dp.Description, dp.Code, dp.CorrectSolution, 
                    dp.WrongOption1, dp.WrongOption2, dp.WrongOption3
             FROM public.active_daily_puzzle adp
             JOIN public.daily_puzzles dp ON adp.PuzzleID = dp.PuzzleID
-            WHERE adp.ActivationDate <= CURRENT_DATE
-            AND adp.ExpirationDate >= CURRENT_DATE
+            WHERE adp.ActivationDate::date <= CURRENT_DATE
+            AND adp.ExpirationDate::date > CURRENT_DATE
+            ORDER BY adp.ActivationDate DESC
+            LIMIT 1
         `;
         
+        console.log('Executing query:', activeQuery);
         const activeResult = await pool.query(activeQuery);
         
         if (activeResult.rows.length === 0) {
-            console.log('No active daily puzzle found for today');
-            return res.status(404).json({ error: 'No daily puzzle available today' });
+            console.log('No active daily puzzle found for today, attempting to generate one');
+            
+            // Try running the update script directly from the API if needed
+            try {
+                const path = require('path');
+                const scriptPath = path.resolve(__dirname, './scripts/update_daily_puzzle.js');
+                console.log('Attempting to run script at path:', scriptPath);
+                
+                const { exec } = require('child_process');
+                exec(`node "${scriptPath}"`, async (error, stdout, stderr) => {
+                    if (error) {
+                        console.error('Error executing update script:', error);
+                        return res.status(404).json({ error: 'No daily puzzle available today' });
+                    }
+                    console.log('Update script output:', stdout);
+                    
+                    // Try fetching again after running the update script
+                    const retryQuery = await pool.query(activeQuery);
+                    
+                    if (retryQuery.rows.length === 0) {
+                        return res.status(404).json({ error: 'No daily puzzle available today' });
+                    }
+                    
+                    const puzzle = retryQuery.rows[0];
+                    console.log(`Found active puzzle ${puzzle.puzzleid} for today after update`);
+                    
+                    // Format the response
+                    const response = {
+                        puzzleId: puzzle.puzzleid,
+                        activationDate: puzzle.activationdate,
+                        expirationDate: puzzle.expirationdate,
+                        difficulty: puzzle.difficulty,
+                        description: puzzle.description,
+                        code: puzzle.code,
+                        options: [
+                            { text: puzzle.correctsolution, isCorrect: true },
+                            { text: puzzle.wrongoption1, isCorrect: false },
+                            { text: puzzle.wrongoption2, isCorrect: false },
+                            { text: puzzle.wrongoption3, isCorrect: false }
+                        ].sort(() => Math.random() - 0.5) // Shuffle the options
+                    };
+                    
+                    res.json(response);
+                });
+            } catch (execError) {
+                console.error('Failed to execute update script:', execError);
+                return res.status(404).json({ error: 'No daily puzzle available today' });
+            }
+            return;
         }
         
         const puzzle = activeResult.rows[0];
@@ -535,8 +590,10 @@ app.get('/api/daily-puzzle/completed/:email', async (req, res) => {
         // Get today's puzzle ID
         const puzzleQuery = await pool.query(`
             SELECT PuzzleID FROM public.active_daily_puzzle
-            WHERE ActivationDate <= CURRENT_DATE
-            AND ExpirationDate >= CURRENT_DATE
+            WHERE ActivationDate::date <= CURRENT_DATE
+            AND ExpirationDate::date > CURRENT_DATE
+            ORDER BY ActivationDate DESC
+            LIMIT 1
         `);
         
         if (puzzleQuery.rows.length === 0) {
@@ -549,6 +606,7 @@ app.get('/api/daily-puzzle/completed/:email', async (req, res) => {
         const completionQuery = await pool.query(`
             SELECT * FROM public.daily_puzzle_completions
             WHERE UserID = $1 AND PuzzleID = $2
+            AND CompletionDate::date = CURRENT_DATE
         `, [userId, puzzleId]);
         
         const hasCompleted = completionQuery.rows.length > 0;
@@ -580,7 +638,7 @@ app.post('/api/daily-puzzle/complete', async (req, res) => {
         
         // Get user ID
         const userQuery = await pool.query(
-            'SELECT UserID FROM public.users WHERE Email = $1',
+            'SELECT UserID, Points, ChallengesCompleted, StreakCounter, last_activity_date FROM public.users WHERE Email = $1',
             [email]
         );
         
@@ -593,48 +651,57 @@ app.post('/api/daily-puzzle/complete', async (req, res) => {
         // Start transaction
         await pool.query('BEGIN');
         
-        // Check if already completed
+        // Check if already completed to avoid giving points again
         const checkQuery = await pool.query(`
             SELECT * FROM public.daily_puzzle_completions
             WHERE UserID = $1 AND PuzzleID = $2
         `, [userId, puzzleId]);
         
-        if (checkQuery.rows.length > 0) {
-            await pool.query('ROLLBACK');
-            return res.status(400).json({ error: 'User has already completed this puzzle' });
+        let stats;
+        
+        if (checkQuery.rows.length === 0) {
+            // First completion - record it and award points
+            await pool.query(`
+                INSERT INTO public.daily_puzzle_completions (UserID, PuzzleID, CompletionDate)
+                VALUES ($1, $2, CURRENT_DATE)
+            `, [userId, puzzleId]);
+            
+            // Award points and update user stats
+            const updateQuery = await pool.query(`
+                UPDATE public.users
+                SET Points = Points + 25,  -- More points for daily puzzles
+                    ChallengesCompleted = ChallengesCompleted + 1,
+                    StreakCounter = 
+                        CASE 
+                            WHEN last_activity_date = CURRENT_DATE - INTERVAL '1 day' THEN StreakCounter + 1
+                            WHEN last_activity_date = CURRENT_DATE THEN StreakCounter
+                            ELSE 1
+                        END,
+                    last_activity_date = CURRENT_DATE
+                WHERE UserID = $1
+                RETURNING Points, ChallengesCompleted, StreakCounter
+            `, [userId]);
+            
+            stats = updateQuery.rows[0];
+        } else {
+            // Already completed - just return current stats without modifying them
+            stats = {
+                points: userQuery.rows[0].points,
+                challengescompleted: userQuery.rows[0].challengescompleted,
+                streakcounter: userQuery.rows[0].streakcounter
+            };
         }
-        
-        // Record completion
-        await pool.query(`
-            INSERT INTO public.daily_puzzle_completions (UserID, PuzzleID, CompletionDate)
-            VALUES ($1, $2, CURRENT_DATE)
-        `, [userId, puzzleId]);
-        
-        // Award points and update user stats
-        const updateQuery = await pool.query(`
-            UPDATE public.users
-            SET Points = Points + 25,  -- More points for daily puzzles
-                ChallengesCompleted = ChallengesCompleted + 1,
-                StreakCounter = 
-                    CASE 
-                        WHEN last_activity_date = CURRENT_DATE - INTERVAL '1 day' THEN StreakCounter + 1
-                        WHEN last_activity_date = CURRENT_DATE THEN StreakCounter
-                        ELSE 1
-                    END,
-                last_activity_date = CURRENT_DATE
-            WHERE UserID = $1
-            RETURNING Points, ChallengesCompleted, StreakCounter
-        `, [userId]);
         
         await pool.query('COMMIT');
         
         res.json({
-            message: 'Daily puzzle completed successfully',
-            stats: updateQuery.rows[0]
+            message: checkQuery.rows.length === 0 ? 'Daily puzzle completed successfully' : 'Correct solution! (Already completed today)',
+            stats: stats,
+            firstCompletion: checkQuery.rows.length === 0
         });
     } catch (error) {
         await pool.query('ROLLBACK').catch(console.error);
-        console.error('Error recording puzzle completion:', error);
+        console.error('Error handling puzzle completion:', error);
         res.status(500).json({ error: 'Server error', details: error.message });
     }
 });
