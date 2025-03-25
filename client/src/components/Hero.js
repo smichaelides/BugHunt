@@ -121,7 +121,7 @@ const Hero = () => {
         <div className="hero-container">
             <div className="left-section">
                 <h1>Debug Quest</h1>
-                <p>Master debugging through interactive challenges</p>
+                <h4>Master debugging through interactive challenges!!!</h4>
                 <div className="levels-grid">
                     {levels.map((level) => (
                         <div
@@ -153,6 +153,41 @@ const Hero = () => {
                             <p>{userStats.totalScore} points</p>
                         </div>
                     </div>
+
+                    {/* New Badges Section */}
+                    <div className="section-title">Badges & Awards</div>
+                    <div className="badges-container">
+                        <div className="badge-item">
+                            <span className="badge-icon">🌟</span>
+                            <span className="badge-name">First Blood</span>
+                            <span className="badge-description">Completed first challenge</span>
+                        </div>
+                        <div className="badge-item">
+                            <span className="badge-icon">⚡</span>
+                            <span className="badge-name">Speed Demon</span>
+                            <span className="badge-description">Solved under 1 minute</span>
+                        </div>
+                        <div className="badge-item">
+                            <span className="badge-icon">🎯</span>
+                            <span className="badge-name">Sharpshooter</span>
+                            <span className="badge-description">Perfect score streak</span>
+                        </div>
+                        <div className="badge-item">
+                            <span className="badge-icon">🔥</span>
+                            <span className="badge-name">Hot Streak</span>
+                            <span className="badge-description">7 day streak</span>
+                        </div>
+                        <div className="badge-item">
+                            <span className="badge-icon">🧠</span>
+                            <span className="badge-name">Problem Solver</span>
+                            <span className="badge-description">Solved 10 challenges</span>
+                        </div>
+                        <div className="badge-item">
+                            <span className="badge-icon">👑</span>
+                            <span className="badge-name">Champion</span>
+                            <span className="badge-description">Top 10 leaderboard</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="daily-puzzle-section">
@@ -165,7 +200,7 @@ const Hero = () => {
                                         {dailyPuzzleInfo.difficulty}
                                     </div>
                                     <div className="puzzle-timer">
-                                        <span>Resets in: </span>
+                                        <span>Next puzzle in: </span>
                                         <span className="time-value">
                                             {timeRemaining.hours.toString().padStart(2, '0')}:
                                             {timeRemaining.minutes.toString().padStart(2, '0')}:
@@ -188,11 +223,11 @@ const Hero = () => {
                                     className="daily-puzzle-button" 
                                     onClick={handleDailyPuzzleClick}
                                 >
-                                    {dailyPuzzleCompleted ? 'View Completed Puzzle' : 'Solve Daily Puzzle'}
+                                    {dailyPuzzleCompleted ? 'View Completed Puzzle' : 'Solve Daily Puzzle!'}
                                 </button>
                             </>
                         ) : (
-                            <p>No daily puzzle available right now.</p>
+                            <h3>No daily puzzle available right now.</h3>
                         )}
                     </div>
                 </div>

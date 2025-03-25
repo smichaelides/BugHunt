@@ -62,7 +62,7 @@
 }
 
 .answer-bubble {
-    background-color: #1e1e1e;
+    background-color: #e8e8e8;
     padding: 1rem;
     border-radius: 8px;
     cursor: pointer;
@@ -82,7 +82,7 @@
 
 .answer-bubble code {
     font-family: 'Consolas', 'Monaco', monospace;
-    color: #d4d4d4;
+    color: #000000;
     font-size: 0.9rem;
 }
 
@@ -137,4 +137,19 @@
 
 .error {
     color: #e74c3c;
+}
+
+.difficulty.easy {
+    background: #e0f2e9;
+    color: #2da160;
+}
+
+.difficulty.medium {
+    background: #fff3e0;
+    color: #f9a825;
+}
+
+.difficulty.hard {
+    background: #fee8e7;
+    color: #d32f2f;
 }

@@ -117,22 +117,26 @@
 
 .right-sections {
     display: grid;
-    grid-template-rows: 1fr 2fr;
-    gap: 2rem;
+    grid-template-rows: 1.5fr 1fr;
+    gap: 1.5rem;
+    height: 100%;
+    overflow: hidden;
+    padding-right: 1rem;
 }
 
-.welcome-section, .daily-puzzle-section {
+.welcome-section {
     background-color: #ffffff;
-    padding: 1.5rem;
+    padding: 1.25rem;
     border-radius: 10px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
 }
 
 .stats-container {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-    margin-top: 1.5rem;
+    gap: 1rem;
+    margin-top: 1rem;
 }
 
 .stat-item {
@@ -162,15 +166,12 @@
 }
 
 .daily-puzzle-container {
-    margin-top: 1rem;
-    background-color: #ffffff;
-    padding: 1.5rem;
-    border-radius: 8px;
-    height: calc(100% - 4rem);
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    gap: 0.5rem;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-between;
 }
 
 .daily-puzzle-info {
@@ -178,7 +179,7 @@
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.5rem; /* Reduced margin */
 }
 
 .puzzle-difficulty-badge {
@@ -196,6 +197,8 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    font-family: 'Monaco', monospace;
+    font-weight: bold;
 }
 
 .time-value {
@@ -206,17 +209,18 @@
 }
 
 .daily-puzzle-status {
-    background-color: #f8f9fa;
     border-radius: 8px;
-    padding: 1rem;
+    padding: 0.75rem; /* Reduced padding */
     width: 100%;
     text-align: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.5rem; /* Reduced margin */
 }
 
 .completed-status {
     color: #2f855a;
     font-weight: bold;
+    font-family: 'Monaco', monospace;
+    font-size: 1.2rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -224,8 +228,10 @@
 }
 
 .pending-status {
-    color: #e67e22;
+    color: #e62222;
     font-weight: bold;
+    font-family: 'Monaco', monospace;
+    font-size: 1.2rem;
 }
 
 .checkmark {
@@ -244,12 +250,15 @@
     color: white;
     border: none;
     border-radius: 8px;
-    padding: 0.8rem 2rem;
+    padding: 0.6rem 1.5rem;
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.2s;
     width: 100%;
     max-width: 300px;
+    font-family: 'Monaco', monospace;
+    margin: 0 auto;
+    display: block;
 }
 
 .daily-puzzle-button:hover {
@@ -264,3 +273,92 @@ h2 {
     font-weight: bold;
     font-family: 'Monaco', monospace;
 } 
+h3 {
+    color: #2563eb; /* Blue text for all h2 headers */
+    margin-bottom: 1rem;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+h4 {
+    color:#666;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    font-family: 'Monaco', monospace;
+}
+
+p {
+    color: #666;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    font-family: 'Monaco', monospace;
+}   
+
+/* Update badges container to scroll horizontally */
+.badges-container {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    scrollbar-width: thin;
+    scrollbar-color: #2563eb #f8fafc;
+}
+
+/* Style the scrollbar */
+.badges-container::-webkit-scrollbar {
+    height: 6px;
+}
+
+.badges-container::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-radius: 3px;
+}
+
+.badges-container::-webkit-scrollbar-thumb {
+    background-color: #2563eb;
+    border-radius: 3px;
+}
+
+/* Update badge item to have fixed width */
+.badge-item {
+    background-color: #ffffff;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 150px; /* Fixed width for each badge */
+    flex-shrink: 0; /* Prevent badges from shrinking */
+}
+
+/* Fix daily puzzle section sizing */
+.daily-puzzle-section {
+    background-color: #ffffff;
+    padding: 1.25rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    color: #2563eb;
+    margin: 1rem 0 0.75rem 0;
+    font-family: 'Monaco', monospace;
+    font-weight: bold;
+}

@@ -3,28 +3,26 @@ import { Link } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 import LoginButton from './LoginButton';
 import LogoutButton from './LogoutButton';
+import './Dropdown.css';
 
 const Dropdown = ({ isOpen, toggleMenu }) => {
     const { isAuthenticated } = useAuth0();
 
     return (
-        <div className={`${
-        isOpen ? 'grid' : 'hidden'
-        } grid-rows-5 text-center items-center bg-green-500 font-mono transition-all duration-300 ease-in-out rounded-lg shadow-lg p-4`}
-        onClick={toggleMenu}>
-            <Link className='p-4 mb-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-300 ease-in-out' to='/home'>
+        <div className={`dropdown-menu ${isOpen ? '' : 'hidden'}`} onClick={toggleMenu}>
+            <Link className='dropdown-item' to='/home'>
                 Home
             </Link>
-            <Link className='p-4 mb-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-300 ease-in-out' to='/levels'>
+            <Link className='dropdown-item' to='/levels'>
                 Levels
             </Link>
-            <Link className='p-4 mb-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-300 ease-in-out' to='/daily-puzzle'>
+            <Link className='dropdown-item' to='/daily-puzzle'>
                 Daily Puzzle
             </Link>
-            <Link className='p-4 mb-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-300 ease-in-out' to='/leaderboard'>
+            <Link className='dropdown-item' to='/leaderboard'>
                 Leaderboard
             </Link>
-            <Link className='p-4 mb-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-300 ease-in-out' to='/profile'>
+            <Link className='dropdown-item' to='/profile'>
                 Profile
             </Link>
             {isAuthenticated ? <LogoutButton /> : <LoginButton />}

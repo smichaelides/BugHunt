@@ -108,7 +108,7 @@ const GamePage = () => {
                     ← Back to Level {levelId}
                 </button>
                 <h1>Problem {problemId}</h1>
-                <div className="problem-difficulty">{problem.difficulty}</div>
+                <span className={`difficulty ${problem.difficulty.toLowerCase()}`}>{problem.difficulty}</span>
             </div>
             
             <div className="problem-description">
