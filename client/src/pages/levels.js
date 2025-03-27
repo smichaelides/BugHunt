@@ -18,10 +18,10 @@ const Levels = () => {
                 ]);
                 
                 // Add unlocked and completed status to each level
-                const levelsWithProgress = levelsData.map((level, index) => ({
+                const levelsWithProgress = levelsData.map((level) => ({
                     ...level,
-                    // Level 1 is always unlocked, other levels unlock if previous level is completed
-                    unlocked: index === 0 || progressData.completedLevels.includes(index),
+                    // All levels are now unlocked by default
+                    unlocked: true,
                     completed: progressData.completedLevels.includes(level.id)
                 }));
                 
@@ -37,9 +37,8 @@ const Levels = () => {
     }, []);
 
     const handleLevelClick = (level) => {
-        if (level.unlocked) {
-            navigate(`/level/${level.id}`);
-        }
+        // Since all levels are unlocked, we can remove the check
+        navigate(`/level/${level.id}`);
     };
 
     if (loading) return <div>Loading...</div>;
@@ -52,7 +51,7 @@ const Levels = () => {
                 {levels.map((level, index) => (
                     <React.Fragment key={level.id}>
                         <div 
-                            className={`level-node ${level.unlocked ? 'unlocked' : 'locked'} ${level.completed ? 'completed' : ''}`}
+                            className={`level-node unlocked ${level.completed ? 'completed' : ''}`}
                             onClick={() => handleLevelClick(level)}
                         >
                             <div className="level-circle">
@@ -61,12 +60,11 @@ const Levels = () => {
                             <div className="level-label">{level.name}</div>
                             <div className="level-description">{level.description}</div>
                             <div className="level-status">
-                                {level.completed ? 'Completed' : 
-                                 level.unlocked ? 'Ready' : 'Locked'}
+                                {level.completed ? 'Completed' : 'Ready'}
                             </div>
                         </div>
                         {index < levels.length - 1 && (
-                            <div className={`path-connector ${levels[index + 1].unlocked ? 'unlocked' : 'locked'}`} />
+                            <div className="path-connector unlocked" />
                         )}
                     </React.Fragment>
                 ))}
