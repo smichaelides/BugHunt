@@ -9,56 +9,70 @@ const client = new Client({
     host: process.env.DB_HOST,
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT
+    port: process.env.DB_PORT,
+    ssl: { rejectUnauthorized: false }
 });
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
-});
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const PROBLEMS_PER_LEVEL = 5;  // 5 problems per level
-const TOTAL_LEVELS = 5;       // Total number of levels
-const DIFFICULTY_DISTRIBUTION = {
-    easy: 2,
-    medium: 1,
-    hard: 2
+const PROBLEMS_PER_LEVEL = 5;
+const TOTAL_LEVELS = 10;
+
+const LEVEL_TOPICS = {
+    1: "Intro to Debugging",
+    2: "Basic Syntax Errors",
+    3: "Logic Errors",
+    4: "Runtime Errors",
+    5: "Array and Object Debugging",
+    6: "Function Debugging",
+    7: "Async Code Debugging",
+    8: "Performance Issues",
+    9: "Memory Leaks",
+    10: "Advanced Debugging"
 };
 
-// Function to generate a debugging problem using GPT
-async function generateProblem(difficulty) {
+// Generate a debugging problem using OpenAI
+async function generateProblem(level, topic) {
     try {
         const response = await openai.chat.completions.create({
             model: "gpt-4",
             messages: [{
                 role: "user",
-                content: `Generate a Java debugging challenge in the EXACT format below. The difficulty should be ${difficulty}.
+                content: `
+Generate a Java debugging challenge focused on the theme "${topic}".
+The total code should be no more than 12 lines. Follow this format exactly:
 
-Problem: [Brief problem statement]
+Problem: [Brief problem description here]
 
 Buggy Code:
 \`\`\`java
-[buggy code]
+[up to 12 lines of buggy code]
 \`\`\`
 
-Fixed Code:
+Correct Solution:
 \`\`\`java
-[corrected code]
+[corrected version of the buggy code, up to 12 lines]
 \`\`\`
 
 Wrong Options:
-1. [First wrong option]
-2. [Second wrong option]
-3. [Third wrong option]
+1. \`\`\`java
+[first incorrect solution]
+\`\`\`
+2. \`\`\`java
+[second incorrect solution]
+\`\`\`
+3. \`\`\`java
+[third incorrect solution]
+\`\`\`
 
-IMPORTANT FORMATTING RULES:
-1. Start with "Problem:" (no ### or other markers)
-2. Include "Buggy Code:" and "Fixed Code:" labels
-3. Use \`\`\`java for code blocks
-4. Wrong options should be plain text, not code blocks
-5. Each wrong option should be on a new line starting with a number and period
-6. DO NOT include explanations or additional text`
+Formatting Rules:
+- Use exactly the formatting shown above.
+- All options (correct and incorrect) must be Java code blocks.
+- Each incorrect option must be a plausible fix but contain a mistake.
+- Do NOT include any explanation or extra commentary.
+                `.trim()
             }],
-            max_tokens: 500
+            max_tokens: 800
         });
 
         return response.choices[0].message.content.trim();
@@ -68,87 +82,72 @@ IMPORTANT FORMATTING RULES:
     }
 }
 
-// Function to extract problem data using a more flexible regex
+// Extract problem data
 function extractProblemData(responseText) {
-    console.log("🔍 GPT Response:\n", responseText); // Debugging output
-
-    // Clean up the response text
-    responseText = responseText.replace(/###\s*Problem:/, 'Problem:');
-    responseText = responseText.replace(/Wrong Options \(generate 3 plausible but incorrect solutions\):/, 'Wrong Options:');
-
-    // Match the problem data with a more flexible pattern
     const match = responseText.match(
-        /Problem:\s*(.*?)\n+(?:Buggy Code:)?\s*```java\n([\s\S]+?)\n```[\s\S]*?(?:Fixed Code:)?\s*```java\n([\s\S]+?)\n```[\s\S]*?(?:Wrong Options:)?\s*1\.\s*(.*?)\n2\.\s*(.*?)\n3\.\s*(.*?)(?:\n|$)/
+        /Problem:\s*(.*?)\n+Buggy Code:\s*```java\n([\s\S]+?)\n```[\s\S]+?Correct Solution:\s*```java\n([\s\S]+?)\n```[\s\S]+?Wrong Options:\s*1\.\s*```java\n([\s\S]+?)\n```[\s\S]+?2\.\s*```java\n([\s\S]+?)\n```[\s\S]+?3\.\s*```java\n([\s\S]+?)\n```/
     );
 
     if (!match || match.length !== 7) {
-        console.error("❌ Error parsing problem data. Full response:\n", responseText);
+        console.error("❌ Parsing error. Full GPT response:\n", responseText);
         return null;
     }
-
-    // Clean up the wrong options by removing any remaining code block markers
-    const cleanWrongOption = (text) => {
-        return text.replace(/```java\n?|\n?```/g, '').trim();
-    };
 
     return {
         description: match[1].trim(),
         buggyCode: match[2].trim(),
         fixedCode: match[3].trim(),
-        wrongOption1: cleanWrongOption(match[4]),
-        wrongOption2: cleanWrongOption(match[5]),
-        wrongOption3: cleanWrongOption(match[6])
+        wrongOption1: match[4].trim(),
+        wrongOption2: match[5].trim(),
+        wrongOption3: match[6].trim()
     };
 }
 
-// Main function to populate the database
+// Main function
 async function populateDatabase() {
     await client.connect();
-    console.log(`🛠 Generating ${PROBLEMS_PER_LEVEL} problems for each of the ${TOTAL_LEVELS} levels...`);
+    console.log(`🛠 Generating ${PROBLEMS_PER_LEVEL} problems for ${TOTAL_LEVELS} levels...`);
 
     for (let level = 1; level <= TOTAL_LEVELS; level++) {
-        console.log(`\n📌 Generating problems for Level ${level}...`);
-        
-        // Generate problems for each difficulty
-        for (const [difficulty, count] of Object.entries(DIFFICULTY_DISTRIBUTION)) {
-            for (let i = 0; i < count; i++) {
-                console.log(`  Generating ${difficulty} problem ${i + 1}/${count}...`);
-                const problemResponse = await generateProblem(difficulty);
+        const topic = LEVEL_TOPICS[level];
+        console.log(`\n📌 Generating problems for Level ${level}: ${topic}`);
 
-                if (!problemResponse) {
-                    console.log(`  ⚠️ Skipping problem due to API error.`);
-                    continue;
-                }
+        for (let i = 0; i < PROBLEMS_PER_LEVEL; i++) {
+            console.log(`  🔧 Problem ${i + 1}/${PROBLEMS_PER_LEVEL}...`);
+            const responseText = await generateProblem(level, topic);
 
-                const problemData = extractProblemData(problemResponse);
-                if (!problemData) {
-                    console.log(`  ⚠️ Skipping problem due to parsing error.`);
-                    continue;
-                }
+            if (!responseText) {
+                console.log(`  ⚠️ Skipped due to OpenAI error.`);
+                continue;
+            }
 
-                // Insert into problems table
-                const query = `
-                    INSERT INTO problems (Level, Difficulty, Description, Code, CorrectSolution, WrongOption1, WrongOption2, WrongOption3)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING ProblemID;
-                `;
+            const problem = extractProblemData(responseText);
+            if (!problem) {
+                console.log(`  ⚠️ Skipped due to parsing error.`);
+                continue;
+            }
 
-                const values = [
-                    level,
-                    difficulty.charAt(0).toUpperCase() + difficulty.slice(1),
-                    problemData.description,
-                    problemData.buggyCode,
-                    problemData.fixedCode,
-                    problemData.wrongOption1,
-                    problemData.wrongOption2,
-                    problemData.wrongOption3
-                ];
+            const query = `
+                INSERT INTO problems (Level, Difficulty, Description, Code, CorrectSolution, WrongOption1, WrongOption2, WrongOption3)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING ProblemID;
+            `;
 
-                try {
-                    const result = await client.query(query, values);
-                    console.log(`  ✅ Inserted ProblemID: ${result.rows[0].problemid}`);
-                } catch (err) {
-                    console.error("  ❌ Error inserting problem:", err);
-                }
+            const values = [
+                level,
+                topic,
+                problem.description,
+                problem.buggyCode,
+                problem.fixedCode,
+                problem.wrongOption1,
+                problem.wrongOption2,
+                problem.wrongOption3
+            ];
+
+            try {
+                const result = await client.query(query, values);
+                console.log(`  ✅ Inserted ProblemID: ${result.rows[0].problemid}`);
+            } catch (err) {
+                console.error("  ❌ Error inserting problem:", err);
             }
         }
     }
@@ -157,5 +156,4 @@ async function populateDatabase() {
     console.log("\n🎯 Database population completed.");
 }
 
-// Run the script
 populateDatabase();
