@@ -300,16 +300,18 @@ p {
 /* Update badges container to scroll horizontally */
 .badges-container {
     display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
-    padding: 0.75rem;
-    background-color: #f8fafc;
-    border-radius: 8px;
+    flex-direction: row;
+    gap: 0.75rem;
+    padding: 0.5rem;
     overflow-x: auto;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    margin: 0 auto;
+    max-width: 1000px;
+    justify-content: center;
+    -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
     scrollbar-color: #2563eb #f8fafc;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
 }
 
 /* Style the scrollbar */
@@ -329,18 +331,52 @@ p {
 
 /* Update badge item to have fixed width */
 .badge-item {
-    background-color: #ffffff;
-    padding: 1rem;
+    background: white;
     border-radius: 8px;
+    padding: 1.25rem 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    min-width: 200px;
+    min-height: 140px;
+    flex-shrink: 0;
     text-align: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: transform 0.2s;
+    transition: transform 0.2s, border-color 0.3s ease;
     display: flex;
     flex-direction: column;
+    justify-content: center;
     align-items: center;
-    gap: 0.5rem;
-    min-width: 150px; /* Fixed width for each badge */
-    flex-shrink: 0; /* Prevent badges from shrinking */
+    border: 2px solid transparent;
+}
+
+.badge-item.earned {
+    border-color: #48bb78;
+    box-shadow: 0 2px 8px rgba(72, 187, 120, 0.2);
+}
+
+.badge-item.earned .badge-name {
+    color: #2f855a;
+}
+
+.badge-item.earned .badge-description {
+    color: #48bb78;
+}
+
+.badge-icon {
+    font-size: 1.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.badge-name {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #2563eb;
+    margin-bottom: 0.75rem;
+}
+
+.badge-description {
+    font-size: 1rem;
+    color: #666;
+    line-height: 1.4;
+    max-width: 180px;
 }
 
 /* Fix daily puzzle section sizing */
@@ -356,9 +392,9 @@ p {
 }
 
 .section-title {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     color: #2563eb;
-    margin: 1rem 0 0.75rem 0;
+    margin: 0.5rem 0 0.5rem 0;
     font-family: 'Monaco', monospace;
     font-weight: bold;
 }

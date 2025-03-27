@@ -21,6 +21,15 @@ const Hero = () => {
         minutes: 0,
         seconds: 0
     });
+    const [leaderboardPosition, setLeaderboardPosition] = useState(null);
+
+    // Track earned badges
+    const [earnedBadges, setEarnedBadges] = useState({
+        firstBlood: false,
+        hotStreak: false,
+        problemSolver: false,
+        champion: false
+    });
 
     // Calculate time until midnight (next puzzle)
     useEffect(() => {
@@ -65,12 +74,21 @@ const Hero = () => {
                 }
                 const levelsData = await levelsResponse.json();
                 
+                // Fetch leaderboard data
+                const leaderboardResponse = await fetch('http://localhost:5001/api/leaderboard');
+                if (leaderboardResponse.ok) {
+                    const leaderboardData = await leaderboardResponse.json();
+                    // Find user's position in leaderboard
+                    const userPosition = leaderboardData.findIndex(entry => entry.email === user.email) + 1;
+                    setLeaderboardPosition(userPosition);
+                }
+                
                 // Check if user completed today's daily puzzle
                 const completionResponse = await fetch(`http://localhost:5001/api/daily-puzzle/completed/${user.email}`);
                 const completionData = await completionResponse.json();
                 setDailyPuzzleCompleted(completionData.completed);
 
-                // Get basic daily puzzle info (without the full details)
+                // Get basic daily puzzle info
                 try {
                     const puzzleResponse = await fetch('http://localhost:5001/api/daily-puzzle');
                     if (puzzleResponse.ok) {
@@ -82,7 +100,6 @@ const Hero = () => {
                     }
                 } catch (puzzleErr) {
                     console.error('Error fetching daily puzzle:', puzzleErr);
-                    // Don't set an error state for this as it's not critical
                 }
                 
                 setLevels(levelsData);
@@ -101,6 +118,20 @@ const Hero = () => {
 
         fetchData();
     }, [user, isAuthenticated]);
+
+    useEffect(() => {
+        const checkEarnedBadges = () => {
+            const newEarnedBadges = {
+                firstBlood: userStats.completedChallenges >= 1,
+                hotStreak: userStats.streak >= 7,
+                problemSolver: userStats.completedChallenges >= 10,
+                champion: leaderboardPosition !== null && leaderboardPosition <= 10
+            };
+            setEarnedBadges(newEarnedBadges);
+        };
+
+        checkEarnedBadges();
+    }, [userStats, leaderboardPosition]);
 
     const handleLevelClick = (level) => {
         navigate(`/level/${level.id}`);
@@ -157,32 +188,22 @@ const Hero = () => {
                     {/* New Badges Section */}
                     <div className="section-title">Badges & Awards</div>
                     <div className="badges-container">
-                        <div className="badge-item">
+                        <div className={`badge-item ${earnedBadges.firstBlood ? 'earned' : ''}`}>
                             <span className="badge-icon">🌟</span>
                             <span className="badge-name">First Blood</span>
                             <span className="badge-description">Completed first challenge</span>
                         </div>
-                        <div className="badge-item">
-                            <span className="badge-icon">⚡</span>
-                            <span className="badge-name">Speed Demon</span>
-                            <span className="badge-description">Solved under 1 minute</span>
-                        </div>
-                        <div className="badge-item">
-                            <span className="badge-icon">🎯</span>
-                            <span className="badge-name">Sharpshooter</span>
-                            <span className="badge-description">Perfect score streak</span>
-                        </div>
-                        <div className="badge-item">
+                        <div className={`badge-item ${earnedBadges.hotStreak ? 'earned' : ''}`}>
                             <span className="badge-icon">🔥</span>
                             <span className="badge-name">Hot Streak</span>
                             <span className="badge-description">7 day streak</span>
                         </div>
-                        <div className="badge-item">
+                        <div className={`badge-item ${earnedBadges.problemSolver ? 'earned' : ''}`}>
                             <span className="badge-icon">🧠</span>
                             <span className="badge-name">Problem Solver</span>
                             <span className="badge-description">Solved 10 challenges</span>
                         </div>
-                        <div className="badge-item">
+                        <div className={`badge-item ${earnedBadges.champion ? 'earned' : ''}`}>
                             <span className="badge-icon">👑</span>
                             <span className="badge-name">Champion</span>
                             <span className="badge-description">Top 10 leaderboard</span>
