@@ -22,29 +22,12 @@ async function updateDailyPuzzle() {
     // Start a transaction
     await client.query('BEGIN');
 
-    // Check if today's puzzle already exists and is valid
-    const todayCheck = await client.query(`
-      SELECT * FROM public.active_daily_puzzle 
-      WHERE ActivationDate::date <= CURRENT_DATE
-      AND ExpirationDate::date > CURRENT_DATE
-    `);
-
-    if (todayCheck.rows.length > 0) {
-      console.log(`Daily puzzle for today (${today}) already exists: Puzzle ID ${todayCheck.rows[0].puzzleid}`);
-      await client.query('COMMIT');
-      return;
-    }
-
-    // There's no puzzle for today, so let's deactivate any old puzzles first
-    console.log('No active puzzle for today, checking for any expired puzzles to clean up');
-    
-    // Expire any active puzzles that should be over
+    // First, clean up any existing puzzles for today
     await client.query(`
-      UPDATE public.active_daily_puzzle
-      SET ExpirationDate = LEAST(ExpirationDate, CURRENT_DATE)
-      WHERE ExpirationDate::date > CURRENT_DATE
-      AND ActivationDate::date < CURRENT_DATE
+      DELETE FROM public.active_daily_puzzle 
+      WHERE ActivationDate::date = CURRENT_DATE
     `);
+    console.log('Cleaned up any existing puzzles for today');
 
     // Get a random unused puzzle
     const puzzleQuery = await client.query(`
@@ -74,7 +57,7 @@ async function updateDailyPuzzle() {
       `);
       
       if (retryQuery.rows.length === 0) {
-        console.log('Still no puzzles available after reset. Manual intervention needed.');
+        console.error('Still no puzzles available after reset. Manual intervention needed.');
         await client.query('ROLLBACK');
         return;
       }
@@ -91,14 +74,14 @@ async function updateDailyPuzzle() {
       
       await client.query(`
         INSERT INTO public.active_daily_puzzle (PuzzleID, ActivationDate, ExpirationDate)
-        VALUES ($1, $2, $3)
-      `, [puzzleId, today, tomorrowStr]);
+        VALUES ($1, CURRENT_DATE, $2)
+      `, [puzzleId, tomorrowStr]);
       
       await client.query(`
         UPDATE public.daily_puzzles
-        SET IsUsed = true, LastUsedDate = $2
+        SET IsUsed = true, LastUsedDate = CURRENT_DATE
         WHERE PuzzleID = $1
-      `, [puzzleId, today]);
+      `, [puzzleId]);
       
       console.log(`Set puzzle ${puzzleId} as today's daily puzzle (${today} to ${tomorrowStr})`);
     } else {
@@ -114,14 +97,14 @@ async function updateDailyPuzzle() {
       // Set the new puzzle as active
       await client.query(`
         INSERT INTO public.active_daily_puzzle (PuzzleID, ActivationDate, ExpirationDate)
-        VALUES ($1, $2, $3)
-      `, [puzzleId, today, tomorrowStr]);
+        VALUES ($1, CURRENT_DATE, $2)
+      `, [puzzleId, tomorrowStr]);
       
       await client.query(`
         UPDATE public.daily_puzzles
-        SET IsUsed = true, LastUsedDate = $2
+        SET IsUsed = true, LastUsedDate = CURRENT_DATE
         WHERE PuzzleID = $1
-      `, [puzzleId, today]);
+      `, [puzzleId]);
       
       console.log(`Set puzzle ${puzzleId} as today's daily puzzle (${today} to ${tomorrowStr})`);
     }

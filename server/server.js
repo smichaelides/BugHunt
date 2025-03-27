@@ -489,58 +489,37 @@ app.get('/api/daily-puzzle', async (req, res) => {
         `;
         
         console.log('Executing query:', activeQuery);
-        const activeResult = await pool.query(activeQuery);
+        let activeResult = await pool.query(activeQuery);
         
         if (activeResult.rows.length === 0) {
             console.log('No active daily puzzle found for today, attempting to generate one');
             
-            // Try running the update script directly from the API if needed
+            // Try running the update script
             try {
                 const path = require('path');
+                const { promisify } = require('util');
+                const exec = promisify(require('child_process').exec);
                 const scriptPath = path.resolve(__dirname, './scripts/update_daily_puzzle.js');
                 console.log('Attempting to run script at path:', scriptPath);
                 
-                const { exec } = require('child_process');
-                exec(`node "${scriptPath}"`, async (error, stdout, stderr) => {
-                    if (error) {
-                        console.error('Error executing update script:', error);
-                        return res.status(404).json({ error: 'No daily puzzle available today' });
-                    }
-                    console.log('Update script output:', stdout);
-                    
-                    // Try fetching again after running the update script
-                    const retryQuery = await pool.query(activeQuery);
-                    
-                    if (retryQuery.rows.length === 0) {
-                        return res.status(404).json({ error: 'No daily puzzle available today' });
-                    }
-                    
-                    const puzzle = retryQuery.rows[0];
-                    console.log(`Found active puzzle ${puzzle.puzzleid} for today after update`);
-                    
-                    // Format the response
-                    const response = {
-                        puzzleId: puzzle.puzzleid,
-                        activationDate: puzzle.activationdate,
-                        expirationDate: puzzle.expirationdate,
-                        difficulty: puzzle.difficulty,
-                        description: puzzle.description,
-                        code: puzzle.code,
-                        options: [
-                            { text: puzzle.correctsolution, isCorrect: true },
-                            { text: puzzle.wrongoption1, isCorrect: false },
-                            { text: puzzle.wrongoption2, isCorrect: false },
-                            { text: puzzle.wrongoption3, isCorrect: false }
-                        ].sort(() => Math.random() - 0.5) // Shuffle the options
-                    };
-                    
-                    res.json(response);
-                });
+                // Execute the script and wait for it to complete
+                const { stdout, stderr } = await exec(`node "${scriptPath}"`);
+                console.log('Update script output:', stdout);
+                if (stderr) {
+                    console.error('Update script errors:', stderr);
+                }
+                
+                // Check again for the puzzle after script execution
+                activeResult = await pool.query(activeQuery);
+                
+                if (activeResult.rows.length === 0) {
+                    console.error('No puzzle available after running update script');
+                    return res.status(404).json({ error: 'No daily puzzle available today' });
+                }
             } catch (execError) {
                 console.error('Failed to execute update script:', execError);
                 return res.status(404).json({ error: 'No daily puzzle available today' });
             }
-            return;
         }
         
         const puzzle = activeResult.rows[0];
