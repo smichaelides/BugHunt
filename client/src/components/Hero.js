@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth0 } from "@auth0/auth0-react";
+import { getApiUrl } from '../utils/api';
 import './Hero.css';
 
 const Hero = () => {
@@ -61,21 +62,13 @@ const Hero = () => {
                 }
 
                 // Fetch user data
-                const userResponse = await fetch(`http://localhost:5001/api/auth/user/${encodeURIComponent(user.email)}`);
-                if (!userResponse.ok) {
-                    throw new Error('Failed to fetch user data');
-                }
-                const userData = await userResponse.json();
-
+                const userResponse = await fetchUserData(user.email);
+                
                 // Fetch levels
-                const levelsResponse = await fetch('http://localhost:5001/api/levels');
-                if (!levelsResponse.ok) {
-                    throw new Error('Failed to fetch levels');
-                }
-                const levelsData = await levelsResponse.json();
+                const levelsResponse = await fetchLevels();
                 
                 // Fetch leaderboard data
-                const leaderboardResponse = await fetch('http://localhost:5001/api/leaderboard');
+                const leaderboardResponse = await fetchLeaderboard();
                 if (leaderboardResponse.ok) {
                     const leaderboardData = await leaderboardResponse.json();
                     // Find user's position in leaderboard
@@ -84,29 +77,21 @@ const Hero = () => {
                 }
                 
                 // Check if user completed today's daily puzzle
-                const completionResponse = await fetch(`http://localhost:5001/api/daily-puzzle/completed/${user.email}`);
-                const completionData = await completionResponse.json();
-                setDailyPuzzleCompleted(completionData.completed);
+                const completionResponse = await checkDailyPuzzleCompletion(user.email);
+                setDailyPuzzleCompleted(completionResponse.completed);
 
                 // Get basic daily puzzle info
-                try {
-                    const puzzleResponse = await fetch('http://localhost:5001/api/daily-puzzle');
-                    if (puzzleResponse.ok) {
-                        const puzzleData = await puzzleResponse.json();
-                        setDailyPuzzleInfo({
-                            difficulty: puzzleData.difficulty,
-                            puzzleId: puzzleData.puzzleId
-                        });
-                    }
-                } catch (puzzleErr) {
-                    console.error('Error fetching daily puzzle:', puzzleErr);
-                }
+                const puzzleResponse = await fetchDailyPuzzle();
+                setDailyPuzzleInfo({
+                    difficulty: puzzleResponse.difficulty,
+                    puzzleId: puzzleResponse.puzzleId
+                });
                 
-                setLevels(levelsData);
+                setLevels(levelsResponse);
                 setUserStats({
-                    streak: userData.streakcounter || 0,
-                    completedChallenges: userData.challengescompleted || 0,
-                    totalScore: userData.points || 0
+                    streak: userResponse.streakcounter || 0,
+                    completedChallenges: userResponse.challengescompleted || 0,
+                    totalScore: userResponse.points || 0
                 });
                 setLoading(false);
             } catch (err) {
@@ -255,6 +240,61 @@ const Hero = () => {
             </div>
         </div>
     );
+};
+
+const fetchUserData = async (email) => {
+    try {
+        const response = await fetch(getApiUrl(`/api/auth/user/${encodeURIComponent(email)}`));
+        if (!response.ok) throw new Error('Failed to fetch user data');
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching user data:', error);
+        throw error;
+    }
+};
+
+const fetchLevels = async () => {
+    try {
+        const response = await fetch(getApiUrl('/api/levels'));
+        if (!response.ok) throw new Error('Failed to fetch levels');
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching levels:', error);
+        throw error;
+    }
+};
+
+const fetchLeaderboard = async () => {
+    try {
+        const response = await fetch(getApiUrl('/api/leaderboard'));
+        if (!response.ok) throw new Error('Failed to fetch leaderboard');
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching leaderboard:', error);
+        throw error;
+    }
+};
+
+const checkDailyPuzzleCompletion = async (email) => {
+    try {
+        const response = await fetch(getApiUrl(`/api/daily-puzzle/completed/${email}`));
+        if (!response.ok) throw new Error('Failed to check puzzle completion');
+        return await response.json();
+    } catch (error) {
+        console.error('Error checking puzzle completion:', error);
+        throw error;
+    }
+};
+
+const fetchDailyPuzzle = async () => {
+    try {
+        const response = await fetch(getApiUrl('/api/daily-puzzle'));
+        if (!response.ok) throw new Error('Failed to fetch daily puzzle');
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching daily puzzle:', error);
+        throw error;
+    }
 };
 
 export default Hero;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
+import { getApiUrl } from '../utils/api';
 import './DailyPuzzle.css';
 
 const DailyPuzzle = () => {
@@ -49,12 +50,8 @@ const DailyPuzzle = () => {
             if (!isAuthenticated || !user?.email) return;
             
             try {
-                const response = await fetch(`http://localhost:5001/api/daily-puzzle/completed/${user.email}`);
-                const data = await response.json();
-                
-                if (data.completed) {
-                    setHasCompleted(true);
-                }
+                const data = await checkCompletion(user);
+                setHasCompleted(data);
             } catch (err) {
                 console.error('Error checking puzzle completion:', err);
             }
@@ -68,13 +65,7 @@ const DailyPuzzle = () => {
         const fetchDailyPuzzle = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('http://localhost:5001/api/daily-puzzle');
-                
-                if (!response.ok) {
-                    throw new Error('Failed to fetch daily puzzle');
-                }
-                
-                const data = await response.json();
+                const data = await fetchPuzzle();
                 setPuzzle(data);
             } catch (err) {
                 console.error('Error fetching daily puzzle:', err);
@@ -107,18 +98,7 @@ const DailyPuzzle = () => {
             // Record completion if user is authenticated
             if (isAuthenticated && user?.email) {
                 try {
-                    const response = await fetch('http://localhost:5001/api/daily-puzzle/complete', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            email: user.email,
-                            puzzleId: puzzle.puzzleId
-                        })
-                    });
-                    
-                    const data = await response.json();
+                    const data = await submitCompletion(user, puzzle.puzzleId);
                     setStats(data.stats);
                     setHasCompleted(true);
                 } catch (err) {
@@ -246,6 +226,44 @@ const DailyPuzzle = () => {
             )}
         </div>
     );
+};
+
+const checkCompletion = async (user) => {
+    try {
+        const response = await fetch(getApiUrl(`/api/daily-puzzle/completed/${user.email}`));
+        const data = await response.json();
+        return data.completed;
+    } catch (error) {
+        console.error('Error checking puzzle completion:', error);
+        return false;
+    }
+};
+
+const fetchPuzzle = async () => {
+    try {
+        const response = await fetch(getApiUrl('/api/daily-puzzle'));
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching daily puzzle:', error);
+        return null;
+    }
+};
+
+const submitCompletion = async (user, puzzleId) => {
+    try {
+        const response = await fetch(getApiUrl('/api/daily-puzzle/complete'), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email: user.email, puzzleId }),
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Error submitting completion:', error);
+        return null;
+    }
 };
 
 export default DailyPuzzle; 

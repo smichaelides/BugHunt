@@ -2,6 +2,7 @@ import React, { useEffect, useCallback } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Navigate } from "react-router-dom";
 import "./login.css";
+import { getApiUrl } from '../utils/api';
 
 const Login = () => {
   const { 
@@ -12,13 +13,13 @@ const Login = () => {
     error 
   } = useAuth0();
 
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
-
   console.log('Login Component State:', { 
     isAuthenticated, 
     hasUser: !!user, 
     isLoading, 
-    error 
+    error,
+    callbackUrl: `${window.location.origin}/callback`,
+    currentUrl: window.location.href
   });
 
   const handleUserLogin = useCallback(async () => {
@@ -27,7 +28,7 @@ const Login = () => {
     console.log('Handling user login with data:', user);
     
     try {
-      const response = await fetch(`${API_URL}/api/auth/user`, {
+      const response = await fetch(getApiUrl('/api/auth/user'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -51,13 +52,14 @@ const Login = () => {
     } catch (error) {
       console.error('Failed to save user:', error);
     }
-  }, [user, API_URL]);
+  }, [user]);
 
   useEffect(() => {
     console.log('useEffect triggered. Auth state:', { 
       isAuthenticated, 
       hasUser: !!user, 
-      isLoading 
+      isLoading,
+      callbackUrl: `${window.location.origin}/callback`
     });
 
     if (isAuthenticated && user && !isLoading) {
@@ -67,9 +69,17 @@ const Login = () => {
   }, [isAuthenticated, user, isLoading, handleUserLogin]);
 
   const handleLoginClick = () => {
-    console.log('Login button clicked');
+    const callbackUrl = `${window.location.origin}/callback`;
+    console.log('Login button clicked, redirecting with:', {
+      returnTo: "/home",
+      callbackUrl
+    });
+    
     loginWithRedirect({
-      appState: { returnTo: "/home" }
+      appState: { returnTo: "/home" },
+      authorizationParams: {
+        redirect_uri: callbackUrl
+      }
     });
   };
 

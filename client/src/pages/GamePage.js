@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth0 } from "@auth0/auth0-react";
+import { getApiUrl } from '../utils/api';
 import './GamePage.css';
 
 const GamePage = () => {
@@ -16,15 +17,11 @@ const GamePage = () => {
     const [shuffledAnswers, setShuffledAnswers] = useState([]);
 
     useEffect(() => {
-        const fetchProblem = async () => {
+        const loadProblem = async () => {
             try {
-                console.log('Fetching problem with ID:', problemId); // Debug log
-                const response = await fetch(`http://localhost:5001/api/problems/${problemId}`);
-                if (!response.ok) {
-                    throw new Error('Problem not found');
-                }
-                const data = await response.json();
-                console.log('Fetched problem data:', data); // Debug log
+                console.log('Fetching problem with ID:', problemId);
+                const data = await fetchProblem(problemId);
+                console.log('Fetched problem data:', data);
                 setProblem(data);
                 
                 // Shuffle answers once when problem is loaded
@@ -44,33 +41,8 @@ const GamePage = () => {
             }
         };
 
-        fetchProblem();
+        loadProblem();
     }, [problemId]);
-
-    const updateUserProgress = async () => {
-        try {
-            const response = await fetch('http://localhost:5001/api/user/complete-challenge', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: user.email,
-                    problemId: parseInt(problemId),
-                    level: parseInt(levelId)
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to update progress');
-            }
-
-            const data = await response.json();
-            console.log('Progress updated:', data);
-        } catch (err) {
-            console.error('Error updating progress:', err);
-        }
-    };
 
     const handleSelectAnswer = async (answer) => {
         setSelectedAnswer(answer);
@@ -84,23 +56,7 @@ const GamePage = () => {
             // Update user progress when answer is correct
             if (user?.email) {
                 try {
-                    const response = await fetch('http://localhost:5001/api/user/complete-challenge', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            email: user.email,
-                            problemId: parseInt(problemId),
-                            level: parseInt(levelId)
-                        })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Failed to update progress');
-                    }
-
-                    const data = await response.json();
+                    const data = await submitCompletion(user, parseInt(problemId), parseInt(levelId));
                     console.log('Progress updated:', data);
                     
                     // Show stats update in the UI
@@ -198,6 +154,39 @@ const GamePage = () => {
             </div>
         </div>
     );
+};
+
+const fetchProblem = async (problemId) => {
+    try {
+        const response = await fetch(getApiUrl(`/api/problems/${problemId}`));
+        if (!response.ok) {
+            throw new Error('Failed to fetch problem');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching problem:', error);
+        throw error;
+    }
+};
+
+const submitCompletion = async (user, problemId, level) => {
+    try {
+        const response = await fetch(getApiUrl('/api/user/complete-challenge'), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email: user.email,
+                problemId,
+                level
+            }),
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Error submitting completion:', error);
+        throw error;
+    }
 };
 
 export default GamePage;
