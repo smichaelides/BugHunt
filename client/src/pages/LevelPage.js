@@ -12,63 +12,56 @@ const LevelPage = () => {
     const [error, setError] = useState(null);
     const [completedProblems, setCompletedProblems] = useState(new Set());
 
-    // Check completed problems
+    // Fetch problems and check completion status
     useEffect(() => {
-        const fetchCompletedProblems = async () => {
-            if (!isAuthenticated || !user?.email) return;
-            
+        const fetchData = async () => {
             try {
-                const progressResponse = await fetch(`http://localhost:5001/api/user/progress/${user.email}`);
-                if (progressResponse.ok) {
-                    const progressData = await progressResponse.json();
-                    console.log('Progress data:', progressData);
-                    
-                    // Filter completions for current level and create a Set of completed problem IDs
-                    const completed = new Set(
-                        progressData.completions
-                            ?.filter(p => p.level === parseInt(levelId))
-                            ?.map(p => parseInt(p.problemId)) // Make sure to parse as integer
-                    );
-                    console.log('Completed problems set:', completed);
-                    setCompletedProblems(completed);
-                }
-            } catch (err) {
-                console.error('Error fetching completed problems:', err);
-            }
-        };
-
-        fetchCompletedProblems();
-    }, [isAuthenticated, user, levelId]);
-
-    // Fetch problems
-    useEffect(() => {
-        const fetchProblems = async () => {
-            try {
+                // Fetch problems for the level
                 const problemsResponse = await fetch(`http://localhost:5001/api/level/${levelId}/problems`);
                 if (!problemsResponse.ok) {
                     throw new Error('Problems not found');
                 }
                 const problemsData = await problemsResponse.json();
-                console.log('Raw data from server:', problemsData);
                 
                 const formattedProblems = problemsData.map(p => ({
-                    id: parseInt(p.problemId), // Make sure to parse as integer
+                    id: parseInt(p.problemId),
                     title: `Problem ${p.problemId}`,
                     difficulty: p.difficulty,
                     description: p.description
                 }));
                 
-                console.log('Formatted problems:', formattedProblems);
                 setProblems(formattedProblems);
+
+                // Check completion status for each problem if user is authenticated
+                if (isAuthenticated && user?.email) {
+                    const completed = new Set();
+                    
+                    for (const problem of formattedProblems) {
+                        const completionResponse = await fetch(
+                            `http://localhost:5001/api/problem/completed/${encodeURIComponent(user.email)}/${problem.id}`
+                        );
+                        if (completionResponse.ok) {
+                            const completionData = await completionResponse.json();
+                            if (completionData.completed) {
+                                completed.add(problem.id);
+                            }
+                        }
+                    }
+                    
+                    console.log('Completed problems:', completed);
+                    setCompletedProblems(completed);
+                }
+
                 setLoading(false);
             } catch (err) {
+                console.error('Error fetching data:', err);
                 setError(err.message);
                 setLoading(false);
             }
         };
 
-        fetchProblems();
-    }, [levelId]);
+        fetchData();
+    }, [levelId, user, isAuthenticated]);
 
     const handleChallengeClick = (challengeId) => {
         console.log('Navigating to problem:', challengeId);
