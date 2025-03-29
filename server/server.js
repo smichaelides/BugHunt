@@ -408,7 +408,7 @@ app.get('/api/problem/completed/:email/:problemId', async (req, res) => {
     }
 });
 
-// Update the complete-challenge endpoint to match daily puzzle logic
+// Update the complete-challenge endpoint to award 10 points per challenge
 app.post('/api/user/complete-challenge', async (req, res) => {
     try {
         const { email, problemId, level } = req.body;
@@ -446,7 +446,7 @@ app.post('/api/user/complete-challenge', async (req, res) => {
                 VALUES ($1, $2, $3, CURRENT_DATE)
             `, [userId, problemId, level]);
             
-            // Update user stats
+            // Update user stats with 10 points per challenge
             const updateQuery = await pool.query(`
                 UPDATE public.users
                 SET points = points + 10,
@@ -463,6 +463,7 @@ app.post('/api/user/complete-challenge', async (req, res) => {
             `, [userId]);
             
             stats = updateQuery.rows[0];
+            console.log('Updated stats:', stats);
         } else {
             // Already completed - return current stats
             stats = {
@@ -470,6 +471,7 @@ app.post('/api/user/complete-challenge', async (req, res) => {
                 challengescompleted: userQuery.rows[0].challengescompleted,
                 streakcounter: userQuery.rows[0].streakcounter
             };
+            console.log('Already completed, current stats:', stats);
         }
         
         await pool.query('COMMIT');
@@ -670,9 +672,9 @@ app.post('/api/daily-puzzle/complete', async (req, res) => {
             return res.status(400).json({ error: 'Invalid puzzle ID or expired puzzle' });
         }
         
-        // Get user ID and current stats - Fixed column names to match database
+        // Get user ID and current stats
         const userQuery = await pool.query(
-            'SELECT userid, points, challengescompleted, streakcounter, last_activity_date FROM public.users WHERE email = $1',
+            'SELECT UserID, Username, Email, StreakCounter, Points, ChallengesCompleted FROM public.users WHERE Email = $1',
             [email]
         );
         
@@ -688,8 +690,8 @@ app.post('/api/daily-puzzle/complete', async (req, res) => {
         // Check if already completed
         const checkQuery = await pool.query(`
             SELECT * FROM public.daily_puzzle_completions
-            WHERE userid = $1 AND puzzleid = $2
-            AND completiondate::date = CURRENT_DATE
+            WHERE UserID = $1 AND PuzzleID = $2
+            AND CompletionDate::date = CURRENT_DATE
         `, [userId, puzzleId]);
         
         let stats;
@@ -697,28 +699,26 @@ app.post('/api/daily-puzzle/complete', async (req, res) => {
         if (checkQuery.rows.length === 0) {
             // First completion - record it and award points
             await pool.query(`
-                INSERT INTO public.daily_puzzle_completions (userid, puzzleid, completiondate)
+                INSERT INTO public.daily_puzzle_completions (UserID, PuzzleID, CompletionDate)
                 VALUES ($1, $2, CURRENT_DATE)
             `, [userId, puzzleId]);
             
-            // Update user stats - Fixed column names to match database
+            // Update user stats with 20 points for daily puzzle
             const updateQuery = await pool.query(`
                 UPDATE public.users
-                SET points = points + 25,
-                    challengescompleted = challengescompleted + 1,
-                    streakcounter = 
-                        CASE 
-                            WHEN last_activity_date = CURRENT_DATE - INTERVAL '1 day' THEN streakcounter + 1
-                            WHEN last_activity_date = CURRENT_DATE THEN streakcounter
-                            ELSE 1
-                        END,
-                    last_activity_date = CURRENT_DATE
-                WHERE userid = $1
-                RETURNING points, challengescompleted, streakcounter
+                SET Points = Points + 20,
+                    ChallengesCompleted = ChallengesCompleted + 1,
+                    StreakCounter = StreakCounter + 1
+                WHERE UserID = $1
+                RETURNING Points, ChallengesCompleted, StreakCounter
             `, [userId]);
             
-            stats = updateQuery.rows[0];
-            console.log('Updated stats:', stats); // Debug log
+            stats = {
+                points: updateQuery.rows[0].points,
+                challengescompleted: updateQuery.rows[0].challengescompleted,
+                streakcounter: updateQuery.rows[0].streakcounter
+            };
+            console.log('Updated stats:', stats);
         } else {
             // Already completed - return current stats
             stats = {
@@ -726,7 +726,7 @@ app.post('/api/daily-puzzle/complete', async (req, res) => {
                 challengescompleted: userQuery.rows[0].challengescompleted,
                 streakcounter: userQuery.rows[0].streakcounter
             };
-            console.log('Existing stats:', stats); // Debug log
+            console.log('Already completed, current stats:', stats);
         }
         
         await pool.query('COMMIT');
@@ -739,7 +739,7 @@ app.post('/api/daily-puzzle/complete', async (req, res) => {
     } catch (error) {
         await pool.query('ROLLBACK');
         console.error('Error handling daily puzzle completion:', error);
-        res.status(500).json({ error: 'Server error' });
+        res.status(500).json({ error: 'Server error', details: error.message });
     }
 });
 

@@ -83,7 +83,41 @@ const GamePage = () => {
             });
             // Update user progress when answer is correct
             if (user?.email) {
-                await updateUserProgress();
+                try {
+                    const response = await fetch('http://localhost:5001/api/user/complete-challenge', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            email: user.email,
+                            problemId: parseInt(problemId),
+                            level: parseInt(levelId)
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to update progress');
+                    }
+
+                    const data = await response.json();
+                    console.log('Progress updated:', data);
+                    
+                    // Show stats update in the UI
+                    if (data.stats) {
+                        setFeedback(prev => ({
+                            ...prev,
+                            message: `Correct! Well done! +10 points!`,
+                            stats: data.stats
+                        }));
+                    }
+                } catch (err) {
+                    console.error('Error updating progress:', err);
+                    setFeedback({
+                        type: 'error',
+                        message: 'Error updating progress. Please try again.'
+                    });
+                }
             }
         } else {
             setFeedback({
@@ -145,7 +179,15 @@ const GamePage = () => {
                 
                 {feedback && (
                     <div className={`feedback ${feedback.type}`}>
-                        {feedback.message}
+                        <p>{feedback.message}</p>
+                        {feedback.type === 'success' && feedback.stats && (
+                            <div className="stats-update">
+                                <h4>Stats Updated:</h4>
+                                <p>Points: {feedback.stats.points}</p>
+                                <p>Challenges Completed: {feedback.stats.challengescompleted}</p>
+                                <p>Streak: {feedback.stats.streakcounter}</p>
+                            </div>
+                        )}
                         {feedback.type === 'success' && (
                             <button className="next-button" onClick={handleBackToLevel}>
                                 Back to Level
