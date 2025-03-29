@@ -5,7 +5,7 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
-console.log('Setting up Auth0Provider with redirect URI:', window.location.origin);
+console.log('Setting up Auth0Provider with redirect URI:', process.env.REACT_APP_AUTH0_CALLBACK_URL);
 
 const onRedirectCallback = (appState) => {
   console.log('Auth0 redirect callback triggered', appState);
@@ -20,11 +20,11 @@ const root = createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <Auth0Provider
-      domain="dev-6jjadkywt5r7vivx.us.auth0.com"
-      clientId="obHs9V2fQXchiUGXZhrjNRVGTVnOjtdS"
+      domain={process.env.REACT_APP_AUTH0_DOMAIN}
+      clientId={process.env.REACT_APP_AUTH0_CLIENT_ID}
       authorizationParams={{
-        redirect_uri: window.location.origin,
-        audience: "https://dev-6jjadkywt5r7vivx.us.auth0.com/api/v2/",
+        redirect_uri: process.env.REACT_APP_AUTH0_CALLBACK_URL,
+        audience: `https://${process.env.REACT_APP_AUTH0_DOMAIN}/api/v2/`,
         scope: "openid profile email"
       }}
       onRedirectCallback={onRedirectCallback}

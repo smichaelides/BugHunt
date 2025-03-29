@@ -29,4 +29,10 @@ services:
     staticPublishPath: ./client/build
     envVars:
       - key: REACT_APP_API_URL
-        value: https://bughunt-server.onrender.com 
+        value: https://bughunt.onrender.com
+      - key: REACT_APP_AUTH0_DOMAIN
+        value: dev-6jjadkywt5r7vivx.us.auth0.com
+      - key: REACT_APP_AUTH0_CLIENT_ID
+        value: obHs9V2fQXchiUGXZhrjNRVGTVnOjtdS
+      - key: REACT_APP_AUTH0_CALLBACK_URL
+        value: https://bughuntapp.onrender.com/callback 
