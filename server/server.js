@@ -10,15 +10,14 @@ const PORT = process.env.PORT || 5001;
 
 // CORS configuration
 const corsOptions = {
-    origin: [
-        'https://bughuntapp.onrender.com',  // Frontend domain
-        'https://bughunt.onrender.com',     // Backend domain
-        'http://localhost:3000',            // Local development frontend
-        'http://localhost:5001'             // Local development backend
-    ],
+    origin: true, // Allow all origins during development
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
+    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept', 'X-Requested-With'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    credentials: true,
+    maxAge: 86400,
+    preflightContinue: false,
+    optionsSuccessStatus: 204
 };
 
 // For debugging
@@ -33,6 +32,7 @@ console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? 'Found (not showing value)
 console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'Found (not showing value)' : 'Not found');
 
 app.use(cors(corsOptions)); // Enable CORS with options
+app.options('*', cors(corsOptions)); // Handle preflight requests
 app.use(express.json()); // Allow JSON body parsing
 
 // Root route handler
