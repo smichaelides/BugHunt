@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 5001;
 // CORS configuration
 const corsOptions = {
     origin: [
+        'https://bughuntapp.onrender.com',  // Frontend domain
         'https://bughunt.onrender.com',     // Backend domain
         'http://localhost:3000',            // Local development frontend
         'http://localhost:5001'             // Local development backend
