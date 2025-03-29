@@ -18,12 +18,13 @@ const GamePage = () => {
     useEffect(() => {
         const fetchProblem = async () => {
             try {
+                console.log('Fetching problem with ID:', problemId); // Debug log
                 const response = await fetch(`http://localhost:5001/api/problems/${problemId}`);
                 if (!response.ok) {
                     throw new Error('Problem not found');
                 }
                 const data = await response.json();
-                console.log('Fetched problem data:', data);
+                console.log('Fetched problem data:', data); // Debug log
                 setProblem(data);
                 
                 // Shuffle answers once when problem is loaded
@@ -55,7 +56,8 @@ const GamePage = () => {
                 },
                 body: JSON.stringify({
                     email: user.email,
-                    problemId: problemId
+                    problemId: parseInt(problemId),
+                    level: parseInt(levelId)
                 })
             });
 
@@ -80,7 +82,9 @@ const GamePage = () => {
                 message: 'Correct! Well done!'
             });
             // Update user progress when answer is correct
-            await updateUserProgress();
+            if (user?.email) {
+                await updateUserProgress();
+            }
         } else {
             setFeedback({
                 type: 'error',

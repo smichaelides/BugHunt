@@ -8,7 +8,7 @@ import Home from './pages/home';
 import Levels from './pages/levels';
 import Leaderboard from './pages/leaderboard';
 import Profile from './pages/profile';
-import LevelPage from './components/LevelPage';
+import LevelPage from './pages/LevelPage';
 import Login from './pages/login';
 import GamePage from './pages/GamePage';
 import DailyPuzzle from './pages/DailyPuzzle';
