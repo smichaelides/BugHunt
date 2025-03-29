@@ -12,6 +12,7 @@ import LevelPage from './pages/LevelPage';
 import Login from './pages/login';
 import GamePage from './pages/GamePage';
 import DailyPuzzle from './pages/DailyPuzzle';
+import Callback from './pages/Callback';
 import { useAuth0 } from "@auth0/auth0-react";
 
 function App() {
@@ -91,6 +92,8 @@ function App() {
         <Route path='/level/:levelId/problem/:problemId' element={
           isAuthenticated ? <GamePage /> : <Navigate to="/" />
         } />
+        
+        <Route path='/callback' element={<Callback />} />
         
         <Route path='/' element={
           isAuthenticated ? <Navigate to="/home" /> : <Login />
