@@ -17,12 +17,13 @@ import { useAuth0 } from "@auth0/auth0-react";
 function App() {
   const [isOpen, setIsOpen] = useState(false);
   const { isAuthenticated, isLoading, user } = useAuth0();
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
   useEffect(() => {
     const createOrUpdateUser = async () => {
       if (isAuthenticated && user) {
         try {
-          const response = await fetch('http://localhost:5001/api/users', {
+          const response = await fetch(`${API_URL}/api/users`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -47,7 +48,7 @@ function App() {
     };
 
     createOrUpdateUser();
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, API_URL]);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);

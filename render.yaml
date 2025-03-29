@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: bughunt-server
+    env: node
+    buildCommand: cd server && npm install
+    startCommand: cd server && node server.js
+    envVars:
+      - key: DB_USER
+        sync: false
+      - key: DB_HOST
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_SSL
+        sync: false
+      - key: PORT
+        value: 5001
+      - key: OPENAI_API_KEY
+        sync: false
+
+  - type: web
+    name: bughunt-client
+    env: static
+    buildCommand: cd client && npm install && npm run build
+    staticPublishPath: ./client/build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://bughunt-server.onrender.com 
