@@ -221,6 +221,7 @@ app.get('/api/leaderboard', async (req, res) => {
         const leaderboardData = result.rows.map((user, index) => ({
             rank: index + 1,
             username: user.username || 'Anonymous',
+            email: user.email,
             points: user.points || 0,
             challengesCompleted: user.challengescompleted || 0,
             streak: user.streakcounter || 0

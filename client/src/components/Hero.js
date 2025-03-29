@@ -72,8 +72,12 @@ const Hero = () => {
                 if (leaderboardResponse.ok) {
                     const leaderboardData = await leaderboardResponse.json();
                     // Find user's position in leaderboard
-                    const userPosition = leaderboardData.findIndex(entry => entry.email === user.email) + 1;
+                    const userIndex = leaderboardData.findIndex(entry => entry.email === user.email);
+                    // If user is found in the leaderboard (userIndex >= 0), set position to userIndex + 1
+                    // Otherwise, set to null or a value greater than 10
+                    const userPosition = userIndex >= 0 ? userIndex + 1 : 11; // 11 means not in top 10
                     setLeaderboardPosition(userPosition);
+                    console.log('User leaderboard position:', userPosition);
                 }
                 
                 // Check if user completed today's daily puzzle
@@ -112,6 +116,11 @@ const Hero = () => {
                 problemSolver: userStats.completedChallenges >= 10,
                 champion: leaderboardPosition !== null && leaderboardPosition <= 10
             };
+            console.log('Checking badges:', { 
+                stats: userStats, 
+                leaderboardPosition, 
+                badges: newEarnedBadges 
+            });
             setEarnedBadges(newEarnedBadges);
         };
 
@@ -268,10 +277,10 @@ const fetchLeaderboard = async () => {
     try {
         const response = await fetch(getApiUrl('/api/leaderboard'));
         if (!response.ok) throw new Error('Failed to fetch leaderboard');
-        return await response.json();
+        return { ok: true, json: async () => response.json() };
     } catch (error) {
         console.error('Error fetching leaderboard:', error);
-        throw error;
+        return { ok: false, error };
     }
 };
 
