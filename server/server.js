@@ -173,6 +173,7 @@ app.get('/api/leaderboard', async (req, res) => {
         const query = `
             SELECT username, email, points, challengescompleted, streakcounter 
             FROM public.users 
+            WHERE points > 0  /* Only show users with points */
             ORDER BY points DESC 
             LIMIT 10
         `;
@@ -182,19 +183,23 @@ app.get('/api/leaderboard', async (req, res) => {
         const result = await pool.query(query);
         console.log(`Found ${result.rows.length} users for leaderboard`);
         
-        // Transform the data to hide sensitive information and format for display
+        // Transform the data to match the frontend expectations
         const leaderboardData = result.rows.map((user, index) => ({
             rank: index + 1,
-            username: user.username,
-            points: user.points,
-            challengesCompleted: user.challengescompleted,
-            streak: user.streakcounter
+            username: user.username || 'Anonymous',
+            points: user.points || 0,
+            challengesCompleted: user.challengescompleted || 0,
+            streak: user.streakcounter || 0
         }));
         
+        console.log('Transformed leaderboard data:', leaderboardData);
         res.json(leaderboardData);
     } catch (error) {
         console.error('Error fetching leaderboard:', error);
-        res.status(500).json({ error: 'Server error', details: error.message });
+        res.status(500).json({ 
+            error: 'Failed to fetch leaderboard', 
+            details: error.message 
+        });
     }
 });
 

@@ -12,21 +12,19 @@ const Levels = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [levelsData, progressData] = await Promise.all([
-                    fetchLevels(),
-                    fetchUserProgress(1) // hardcoded user ID for now
-                ]);
+                // For now, just fetch levels without user progress
+                const levelsData = await fetchLevels();
                 
-                // Add unlocked and completed status to each level
+                // Assume all levels are unlocked for now
                 const levelsWithProgress = levelsData.map((level) => ({
                     ...level,
-                    // All levels are now unlocked by default
                     unlocked: true,
-                    completed: progressData.completedLevels.includes(level.id)
+                    completed: false // Default to not completed
                 }));
                 
                 setLevels(levelsWithProgress);
             } catch (err) {
+                console.error('Error fetching data:', err);
                 setError(err.message);
             } finally {
                 setLoading(false);
@@ -37,12 +35,11 @@ const Levels = () => {
     }, []);
 
     const handleLevelClick = (level) => {
-        // Since all levels are unlocked, we can remove the check
         navigate(`/level/${level.id}`);
     };
 
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div>Error: {error}</div>;
+    if (loading) return <div className="level-home-page">Loading...</div>;
+    if (error) return <div className="level-home-page">Error: {error}</div>;
 
     return (
         <div className="level-home-page">

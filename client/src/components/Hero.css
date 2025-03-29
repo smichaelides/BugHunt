@@ -345,6 +345,7 @@ p {
     justify-content: center;
     align-items: center;
     border: 2px solid transparent;
+    font-family: 'Monaco', monospace;
 }
 
 .badge-item.earned {

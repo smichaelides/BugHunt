@@ -29,6 +29,15 @@ h1 {
     overflow: hidden;
 }
 
+.leaderboard-header,
+.leaderboard-row {
+    display: grid;
+    grid-template-columns: 120px minmax(200px, 2fr) 100px 120px 120px;
+    gap: 2rem;
+    padding: 1rem;
+    align-items: center;
+}
+
 .leaderboard-header {
     display: grid;
     grid-template-columns: 80px 2fr 1fr 1fr 1fr;
@@ -56,12 +65,19 @@ h1 {
     font-weight: bold;
     color: #2563eb;
     font-size: 1.2rem;
+    padding: 0 1.5rem;
+    min-width: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.leaderboard-header .rank,
+.leaderboard-header .rank {
+    text-align: center;
+    justify-content: center;
+    color: white;
+}
+
 .leaderboard-header .username,
 .leaderboard-header .points,
 .leaderboard-header .challenges,
@@ -72,27 +88,28 @@ h1 {
 .username {
     color: #1e293b;
     font-family: 'Monaco', monospace;
-    display: flex;
-    align-items: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 1.5rem;
+}
+
+.points,
+.challenges,
+.streak {
+    text-align: center;
+    font-family: 'Monaco', monospace;
+    padding: 0 0.5rem;
 }
 
 .points {
-    text-align: center;
     color: #2563eb;
     font-weight: bold;
-    font-family: 'Monaco', monospace;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
-.challenges, .streak {
-    text-align: center;
+.challenges,
+.streak {
     color: #64748b;
-    font-family: 'Monaco', monospace;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 /* Style for top 3 ranks */

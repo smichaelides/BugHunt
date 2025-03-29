@@ -148,9 +148,17 @@
 }
 
 .feedback.error {
-    background-color: rgba(229, 62, 62, 0.1);
-    border: 1px solid #e53e3e;
-    color: #c53030;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    text-align: center;
+}
+
+.feedback.error p {
+    margin: 0;
+    font-weight: bold;
+    color: #e53e3e;
 }
 
 .stats-update {
@@ -172,6 +180,10 @@
 
 .error-message {
     color: #e53e3e;
+    font-family: 'Monaco', monospace;
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
 }
 
 .completed-message {
@@ -225,7 +237,7 @@
 
 .try-again-button {
     display: block;
-    margin-top: 1rem;
+    margin-top: 0.5rem;
     background-color: #4a6ee0;
     color: white;
     border: none;
@@ -234,8 +246,9 @@
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.2s;
+    width: fit-content;
 }
 
 .try-again-button:hover {
     background-color: #2c4aa0;
-} 
+}

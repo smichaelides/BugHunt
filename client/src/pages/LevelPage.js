@@ -75,7 +75,7 @@ const LevelPage = () => {
 
     return (
         <div className="level-page">
-            <h1>Level {levelId}</h1>
+            <h1>Level {levelId} - {problems[0].difficulty}</h1>
             {!isAuthenticated && (
                 <div className="auth-notice">
                     Sign in to track your progress!
@@ -87,16 +87,15 @@ const LevelPage = () => {
                         key={challenge.id} 
                         className={`challenge-card ${completedProblems.has(challenge.id) ? 'completed' : ''}`}
                     >
-                        <h3>{challenge.title}</h3>
-                        <span className={`difficulty ${challenge.difficulty.toLowerCase()}`}>
-                            {challenge.difficulty}
-                        </span>
+                        <div className="challenge-header">
+                            <h3>{challenge.title}</h3>
+                            {completedProblems.has(challenge.id) && (
+                                <div className="completion-badge">
+                                    <span className="checkmark">✓</span> Completed
+                                </div>
+                            )}
+                        </div>
                         <p>{challenge.description}</p>
-                        {completedProblems.has(challenge.id) && (
-                            <div className="completion-badge">
-                                <span className="checkmark">✓</span> Completed
-                            </div>
-                        )}
                         <button 
                             className="start-challenge-btn"
                             onClick={() => handleChallengeClick(challenge.id)}

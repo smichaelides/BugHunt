@@ -231,12 +231,14 @@ const DailyPuzzle = () => {
                                 </div>
                             )}
                             {feedback.type === 'error' && (
-                                <button 
-                                    className="try-again-button"
-                                    onClick={handleTryAgain}
-                                >
-                                    Try Another Solution
-                                </button>
+                                <>
+                                    <button 
+                                        className="try-again-button"
+                                        onClick={handleTryAgain}
+                                    >
+                                        Try Another Solution
+                                    </button>
+                                </>
                             )}
                         </div>
                     )}

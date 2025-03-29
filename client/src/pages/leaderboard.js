@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchLeaderboard } from '../utils/api';
-import './Leaderboard.css';
+import './leaderboard.css';
 
 const Leaderboard = () => {
     const [leaderboardData, setLeaderboardData] = useState([]);
@@ -59,8 +59,12 @@ const Leaderboard = () => {
                             key={entry.rank} 
                             className={`leaderboard-row ${entry.rank <= 3 ? 'top-rank rank-' + entry.rank : ''}`}
                         >
-                            <div className="rank">{getMedal(entry.rank)}</div>
-                            <div className="username">{entry.username}</div>
+                            <div className="rank">
+                                {entry.rank <= 3 ? getMedal(entry.rank) : entry.rank}
+                            </div>
+                            <div className="username" title={entry.username}>
+                                {entry.username}
+                            </div>
                             <div className="points">{entry.points}</div>
                             <div className="challenges">{entry.challengesCompleted || 0}</div>
                             <div className="streak">{entry.streak || 0} days</div>

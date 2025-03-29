@@ -4,7 +4,7 @@ import './App.css';
 import Navbar from './components/Navbar';
 import Dropdown from './components/Dropdown';
 import Footer from './components/Footer';
-import Home from './pages/Home';
+import Home from './pages/home';
 import Levels from './pages/levels';
 import Leaderboard from './pages/leaderboard';
 import Profile from './pages/profile';
