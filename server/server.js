@@ -8,6 +8,18 @@ const { Pool } = require('pg');
 const app = express();
 const PORT = process.env.PORT || 5001;
 
+// CORS configuration
+const corsOptions = {
+    origin: [
+        'https://bughunt.onrender.com',     // Production frontend
+        'http://localhost:3000',            // Local development frontend
+        'http://localhost:5001'             // Local development backend
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+};
+
 // For debugging
 console.log('Server configuration:');
 console.log('PORT:', process.env.PORT || '5001 (default)');
@@ -19,8 +31,23 @@ console.log('DB_NAME:', process.env.DB_NAME ? 'Found' : 'Not found');
 console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? 'Found (not showing value)' : 'Not found');
 console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'Found (not showing value)' : 'Not found');
 
-app.use(cors()); // Enable CORS
+app.use(cors(corsOptions)); // Enable CORS with options
 app.use(express.json()); // Allow JSON body parsing
+
+// Root route handler
+app.get('/', (req, res) => {
+    res.json({
+        message: 'BugHunt API Server',
+        status: 'running',
+        endpoints: {
+            leaderboard: '/api/leaderboard',
+            levels: '/api/levels',
+            dailyPuzzle: '/api/daily-puzzle',
+            userProgress: '/api/user/:userId/progress',
+            problems: '/api/level/:levelId/problems'
+        }
+    });
+});
 
 // Database connection
 const pool = new Pool({
