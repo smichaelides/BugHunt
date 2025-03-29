@@ -9,6 +9,9 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 // For debugging
+console.log('Server configuration:');
+console.log('PORT:', process.env.PORT || '5001 (default)');
+console.log('NODE_ENV:', process.env.NODE_ENV || 'development');
 console.log('Environment variables loaded:');
 console.log('DB_USER:', process.env.DB_USER ? 'Found' : 'Not found');
 console.log('DB_HOST:', process.env.DB_HOST ? 'Found' : 'Not found');
@@ -794,6 +797,7 @@ app.post('/api/daily-puzzle/complete', async (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`Full URL: http://0.0.0.0:${PORT}`);
 });
