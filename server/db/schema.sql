@@ -6,15 +6,15 @@ DROP TABLE IF EXISTS users CASCADE;
 
 -- Create Problems Table
 CREATE TABLE problems (
-    ProblemID SERIAL PRIMARY KEY,
-    Level INT NOT NULL,
-    Difficulty VARCHAR(50),
-    Description TEXT,
-    Code TEXT,
-    CorrectSolution TEXT,
-    WrongOption1 TEXT,
-    WrongOption2 TEXT,
-    WrongOption3 TEXT
+    problemid SERIAL PRIMARY KEY,
+    level INT NOT NULL,
+    difficulty VARCHAR(50),
+    description TEXT,
+    code TEXT,
+    correctsolution TEXT,
+    wrongoption1 TEXT,
+    wrongoption2 TEXT,
+    wrongoption3 TEXT
 );
 
 -- Create Users Table (renamed from 'user' to avoid reserved keyword conflicts)
@@ -57,6 +57,23 @@ CREATE TABLE IF NOT EXISTS public.daily_puzzle_completions (
     PuzzleID INT NOT NULL REFERENCES public.daily_puzzles(PuzzleID),
     CompletionDate DATE NOT NULL DEFAULT CURRENT_DATE,
     CONSTRAINT unique_daily_completion UNIQUE (UserID, PuzzleID)
+);
+
+-- Table to track which users have completed which problems
+CREATE TABLE IF NOT EXISTS public.problem_completions (
+    ID SERIAL PRIMARY KEY,
+    UserID INT NOT NULL REFERENCES public.users(UserID),
+    ProblemID INT NOT NULL REFERENCES public.problems(problemid),
+    Level INT NOT NULL,
+    CompletionDate DATE NOT NULL DEFAULT CURRENT_DATE,
+    CONSTRAINT unique_problem_completion UNIQUE (UserID, ProblemID)
+);
+
+-- Table to track user progress including completed levels
+CREATE TABLE IF NOT EXISTS public.user_progress (
+    userid INTEGER PRIMARY KEY REFERENCES public.users(userid),
+    completedlevels INTEGER[] DEFAULT ARRAY[]::INTEGER[],
+    unlockedlevels INTEGER[] DEFAULT ARRAY[1]::INTEGER[]
 );
 
 
