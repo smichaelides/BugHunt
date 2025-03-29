@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchLeaderboard } from '../utils/api';
-import './leaderboard.css';
+import './Leaderboard.css';
 
 const Leaderboard = () => {
     const [leaderboardData, setLeaderboardData] = useState([]);
