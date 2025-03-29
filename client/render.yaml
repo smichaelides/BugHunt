@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: bughuntapp
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./build
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+      - path: /*.js
+        name: Content-Type
+        value: application/javascript
+      - path: /*.css
+        name: Content-Type
+        value: text/css
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html 
