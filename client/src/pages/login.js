@@ -12,6 +12,8 @@ const Login = () => {
     error 
   } = useAuth0();
 
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+
   console.log('Login Component State:', { 
     isAuthenticated, 
     hasUser: !!user, 
@@ -25,7 +27,7 @@ const Login = () => {
     console.log('Handling user login with data:', user);
     
     try {
-      const response = await fetch('http://localhost:5001/api/auth/user', {
+      const response = await fetch(`${API_URL}/api/auth/user`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -49,7 +51,7 @@ const Login = () => {
     } catch (error) {
       console.error('Failed to save user:', error);
     }
-  }, [user]);
+  }, [user, API_URL]);
 
   useEffect(() => {
     console.log('useEffect triggered. Auth state:', { 

@@ -1,8 +1,8 @@
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
 // User related functions
 export const fetchUserProfile = async (userId) => {
-    const response = await fetch(`${BASE_URL}/user/${userId}`);
+    const response = await fetch(`${BASE_URL}/api/user/${userId}`);
     if (!response.ok) throw new Error('Failed to fetch user profile');
     return response.json();
 };

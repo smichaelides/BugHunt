@@ -11,13 +11,14 @@ const LevelPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [completedProblems, setCompletedProblems] = useState(new Set());
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
     // Fetch problems and check completion status
     useEffect(() => {
         const fetchData = async () => {
             try {
                 // Fetch problems for the level
-                const problemsResponse = await fetch(`http://localhost:5001/api/level/${levelId}/problems`);
+                const problemsResponse = await fetch(`${API_URL}/api/level/${levelId}/problems`);
                 if (!problemsResponse.ok) {
                     throw new Error('Problems not found');
                 }
@@ -38,7 +39,7 @@ const LevelPage = () => {
                     
                     for (const problem of formattedProblems) {
                         const completionResponse = await fetch(
-                            `http://localhost:5001/api/problem/completed/${encodeURIComponent(user.email)}/${problem.id}`
+                            `${API_URL}/api/problem/completed/${encodeURIComponent(user.email)}/${problem.id}`
                         );
                         if (completionResponse.ok) {
                             const completionData = await completionResponse.json();
@@ -61,7 +62,7 @@ const LevelPage = () => {
         };
 
         fetchData();
-    }, [levelId, user, isAuthenticated]);
+    }, [levelId, user, isAuthenticated, API_URL]);
 
     const handleChallengeClick = (challengeId) => {
         console.log('Navigating to problem:', challengeId);

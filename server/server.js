@@ -10,7 +10,10 @@ const PORT = process.env.PORT || 5001;
 
 // CORS configuration
 const corsOptions = {
-    origin: true, // Allow all origins during development
+    origin: [
+        'https://bughuntapp.onrender.com',
+        'http://localhost:3000'
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept', 'X-Requested-With'],
     exposedHeaders: ['Content-Range', 'X-Content-Range'],
