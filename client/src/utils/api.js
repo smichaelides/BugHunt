@@ -56,7 +56,7 @@ export const fetchLevelChallenges = async (levelId) => {
 // Leaderboard function
 export const fetchLeaderboard = async () => {
     try {
-        const response = await fetch('http://localhost:5001/api/leaderboard');
+        const response = await fetch(getApiUrl('/api/leaderboard'));
         if (!response.ok) {
             throw new Error('Failed to fetch leaderboard');
         }
