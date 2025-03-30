@@ -69,7 +69,6 @@ async function updateDailyPuzzle() {
       // Calculate tomorrow's date for expiration
       const tomorrow = new Date(currentDate);
       tomorrow.setDate(currentDate.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0);
       const tomorrowStr = tomorrow.toISOString().split('T')[0];
       
       await client.query(`

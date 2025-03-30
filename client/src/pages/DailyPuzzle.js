@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
-import { getApiUrl } from '../utils/api';
+import { getApiUrl, fetchDailyPuzzle, checkDailyPuzzleCompleted } from '../utils/api';
 import './DailyPuzzle.css';
 
 const DailyPuzzle = () => {
@@ -230,8 +230,7 @@ const DailyPuzzle = () => {
 
 const checkCompletion = async (user) => {
     try {
-        const response = await fetch(getApiUrl(`/api/daily-puzzle/completed/${user.email}`));
-        const data = await response.json();
+        const data = await checkDailyPuzzleCompleted(user.email);
         return data.completed;
     } catch (error) {
         console.error('Error checking puzzle completion:', error);
@@ -241,9 +240,7 @@ const checkCompletion = async (user) => {
 
 const fetchPuzzle = async () => {
     try {
-        const response = await fetch(getApiUrl('/api/daily-puzzle'));
-        const data = await response.json();
-        return data;
+        return await fetchDailyPuzzle();
     } catch (error) {
         console.error('Error fetching daily puzzle:', error);
         return null;

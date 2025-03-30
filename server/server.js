@@ -617,16 +617,16 @@ app.get('/api/daily-puzzle', async (req, res) => {
         today.setHours(0, 0, 0, 0); // Set to start of day for comparison
         console.log('Current date for puzzle lookup:', today.toISOString());
         
-        // Get the active puzzle for today using date-based comparison
+        // Get the active puzzle for today using date-based comparison with lowercase column names
         const activeQuery = `
-            SELECT adp.PuzzleID, adp.ActivationDate, adp.ExpirationDate, 
-                   dp.Difficulty, dp.Description, dp.Code, dp.CorrectSolution, 
-                   dp.WrongOption1, dp.WrongOption2, dp.WrongOption3
+            SELECT adp.puzzleid, adp.activationdate, adp.expirationdate, 
+                   dp.difficulty, dp.description, dp.code, dp.correctsolution, 
+                   dp.wrongoption1, dp.wrongoption2, dp.wrongoption3
             FROM public.active_daily_puzzle adp
-            JOIN public.daily_puzzles dp ON adp.PuzzleID = dp.PuzzleID
-            WHERE adp.ActivationDate::date <= CURRENT_DATE
-            AND adp.ExpirationDate::date > CURRENT_DATE
-            ORDER BY adp.ActivationDate DESC
+            JOIN public.daily_puzzles dp ON adp.puzzleid = dp.puzzleid
+            WHERE adp.activationdate::date <= CURRENT_DATE
+            AND adp.expirationdate::date > CURRENT_DATE
+            ORDER BY adp.activationdate DESC
             LIMIT 1
         `;
         
@@ -696,9 +696,9 @@ app.get('/api/daily-puzzle/completed/:email', async (req, res) => {
         const { email } = req.params;
         console.log(`Checking if user ${email} has completed today's puzzle`);
         
-        // Get user ID
+        // Get user ID - using lowercase column names to match the database
         const userQuery = await pool.query(
-            'SELECT UserID FROM public.users WHERE Email = $1',
+            'SELECT userid FROM public.users WHERE email = $1',
             [email]
         );
         
@@ -708,12 +708,12 @@ app.get('/api/daily-puzzle/completed/:email', async (req, res) => {
         
         const userId = userQuery.rows[0].userid;
         
-        // Get today's puzzle ID
+        // Get today's puzzle ID - using lowercase column names
         const puzzleQuery = await pool.query(`
-            SELECT PuzzleID FROM public.active_daily_puzzle
-            WHERE ActivationDate::date <= CURRENT_DATE
-            AND ExpirationDate::date > CURRENT_DATE
-            ORDER BY ActivationDate DESC
+            SELECT puzzleid FROM public.active_daily_puzzle
+            WHERE activationdate::date <= CURRENT_DATE
+            AND expirationdate::date > CURRENT_DATE
+            ORDER BY activationdate DESC
             LIMIT 1
         `);
         
@@ -723,11 +723,11 @@ app.get('/api/daily-puzzle/completed/:email', async (req, res) => {
         
         const puzzleId = puzzleQuery.rows[0].puzzleid;
         
-        // Check if user has completed this puzzle
+        // Check if user has completed this puzzle - using lowercase column names
         const completionQuery = await pool.query(`
             SELECT * FROM public.daily_puzzle_completions
-            WHERE UserID = $1 AND PuzzleID = $2
-            AND CompletionDate::date = CURRENT_DATE
+            WHERE userid = $1 AND puzzleid = $2
+            AND completiondate::date = CURRENT_DATE
         `, [userId, puzzleId]);
         
         const hasCompleted = completionQuery.rows.length > 0;
@@ -745,21 +745,21 @@ app.post('/api/daily-puzzle/complete', async (req, res) => {
         const { email, puzzleId } = req.body;
         console.log(`Recording completion of puzzle ${puzzleId} for user ${email}`);
         
-        // Verify this is today's puzzle
+        // Verify this is today's puzzle - using lowercase column names
         const todayQuery = await pool.query(`
-            SELECT PuzzleID FROM public.active_daily_puzzle
-            WHERE PuzzleID = $1
-            AND ActivationDate <= CURRENT_DATE
-            AND ExpirationDate >= CURRENT_DATE
+            SELECT puzzleid FROM public.active_daily_puzzle
+            WHERE puzzleid = $1
+            AND activationdate <= CURRENT_DATE
+            AND expirationdate >= CURRENT_DATE
         `, [puzzleId]);
         
         if (todayQuery.rows.length === 0) {
             return res.status(400).json({ error: 'Invalid puzzle ID or expired puzzle' });
         }
         
-        // Get user ID and current stats
+        // Get user ID and current stats - using lowercase column names
         const userQuery = await pool.query(
-            'SELECT UserID, Username, Email, StreakCounter, Points, ChallengesCompleted FROM public.users WHERE Email = $1',
+            'SELECT userid, username, email, streakcounter, points, challengescompleted, lastactivitydate FROM public.users WHERE email = $1',
             [email]
         );
         
@@ -772,36 +772,81 @@ app.post('/api/daily-puzzle/complete', async (req, res) => {
         // Start transaction
         await pool.query('BEGIN');
         
-        // Check if already completed
+        // Check if already completed - using lowercase column names
         const checkQuery = await pool.query(`
             SELECT * FROM public.daily_puzzle_completions
-            WHERE UserID = $1 AND PuzzleID = $2
-            AND CompletionDate::date = CURRENT_DATE
+            WHERE userid = $1 AND puzzleid = $2
+            AND completiondate::date = CURRENT_DATE
         `, [userId, puzzleId]);
         
         let stats;
+        let streakUpdated = false;
         
         if (checkQuery.rows.length === 0) {
             // First completion - record it and award points
             await pool.query(`
-                INSERT INTO public.daily_puzzle_completions (UserID, PuzzleID, CompletionDate)
+                INSERT INTO public.daily_puzzle_completions (userid, puzzleid, completiondate)
                 VALUES ($1, $2, CURRENT_DATE)
             `, [userId, puzzleId]);
             
-            // Update user stats with 10 points for daily puzzle
+            // Handle streak logic - we need to check if the user has been active today or yesterday
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Start of today
+            
+            const lastActivityDate = userQuery.rows[0].lastactivitydate 
+                ? new Date(userQuery.rows[0].lastactivitydate) 
+                : null;
+                
+            let newStreakValue = userQuery.rows[0].streakcounter || 0;
+            
+            if (lastActivityDate) {
+                lastActivityDate.setHours(0, 0, 0, 0); // Start of the last activity day
+                
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1); // Yesterday
+                
+                const daysBetween = Math.floor((today - lastActivityDate) / (1000 * 60 * 60 * 24));
+                
+                console.log('Days since last activity:', daysBetween);
+                
+                if (daysBetween === 0) {
+                    // Already active today, streak stays the same
+                    console.log('Already active today, streak unchanged');
+                    streakUpdated = false;
+                } else if (daysBetween === 1) {
+                    // Active yesterday, increment streak
+                    console.log('Active yesterday, incrementing streak');
+                    newStreakValue += 1;
+                    streakUpdated = true;
+                } else {
+                    // More than 1 day since last activity, reset streak to 1
+                    console.log('More than 1 day since last activity, resetting streak');
+                    newStreakValue = 1;
+                    streakUpdated = true;
+                }
+            } else {
+                // First ever activity, set streak to 1
+                console.log('First ever activity, setting streak to 1');
+                newStreakValue = 1;
+                streakUpdated = true;
+            }
+            
+            // Update user stats with 10 points for daily puzzle - using lowercase column names
             const updateQuery = await pool.query(`
                 UPDATE public.users
-                SET Points = Points + 10,
-                    ChallengesCompleted = ChallengesCompleted + 1,
-                    StreakCounter = StreakCounter + 1
-                WHERE UserID = $1
-                RETURNING Points, ChallengesCompleted, StreakCounter
-            `, [userId]);
+                SET points = points + 10,
+                    challengescompleted = challengescompleted + 1,
+                    streakcounter = $1,
+                    lastactivitydate = CURRENT_DATE
+                WHERE userid = $2
+                RETURNING points, challengescompleted, streakcounter
+            `, [newStreakValue, userId]);
             
             stats = {
                 points: updateQuery.rows[0].points,
                 challengescompleted: updateQuery.rows[0].challengescompleted,
-                streakcounter: updateQuery.rows[0].streakcounter
+                streakcounter: updateQuery.rows[0].streakcounter,
+                streakUpdated: streakUpdated
             };
             console.log('Updated stats:', stats);
         } else {
@@ -809,7 +854,8 @@ app.post('/api/daily-puzzle/complete', async (req, res) => {
             stats = {
                 points: userQuery.rows[0].points,
                 challengescompleted: userQuery.rows[0].challengescompleted,
-                streakcounter: userQuery.rows[0].streakcounter
+                streakcounter: userQuery.rows[0].streakcounter,
+                streakUpdated: false
             };
             console.log('Already completed, current stats:', stats);
         }

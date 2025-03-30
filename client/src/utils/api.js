@@ -61,12 +61,15 @@ export const fetchLeaderboard = async () => {
 };
 
 // Daily Puzzle functions
-export const fetchDailyPuzzle = async (userId = null) => {
-    const endpoint = userId 
-        ? `/api/daily-puzzle/completed/${userId}`
-        : '/api/daily-puzzle';
-    
-    const response = await fetch(getApiUrl(endpoint));
+export const fetchDailyPuzzle = async () => {
+    const response = await fetch(getApiUrl('/api/daily-puzzle'));
     if (!response.ok) throw new Error('Failed to fetch daily puzzle');
+    return response.json();
+};
+
+export const checkDailyPuzzleCompleted = async (email) => {
+    if (!email) return { completed: false };
+    const response = await fetch(getApiUrl(`/api/daily-puzzle/completed/${encodeURIComponent(email)}`));
+    if (!response.ok) throw new Error('Failed to check puzzle completion');
     return response.json();
 }; 
