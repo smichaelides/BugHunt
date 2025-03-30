@@ -420,7 +420,7 @@ app.get('/api/problem/completed/:email/:problemId', async (req, res) => {
         
         // Get user ID
         const userQuery = await pool.query(
-            'SELECT userid FROM public.users WHERE email = $1',
+            'SELECT UserID FROM public.users WHERE email = $1',
             [email]
         );
         
@@ -698,7 +698,7 @@ app.get('/api/daily-puzzle/completed/:email', async (req, res) => {
         
         // Get user ID - using lowercase column names to match the database
         const userQuery = await pool.query(
-            'SELECT userid FROM public.users WHERE email = $1',
+            'SELECT UserID FROM public.users WHERE email = $1',
             [email]
         );
         
@@ -759,7 +759,7 @@ app.post('/api/daily-puzzle/complete', async (req, res) => {
         
         // Get user ID and current stats - using lowercase column names
         const userQuery = await pool.query(
-            'SELECT userid, username, email, streakcounter, points, challengescompleted, lastactivitydate FROM public.users WHERE email = $1',
+            'SELECT UserID, username, email, streakcounter, points, challengescompleted, lastactivitydate FROM public.users WHERE email = $1',
             [email]
         );
         
