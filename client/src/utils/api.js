@@ -55,9 +55,17 @@ export const fetchLevelChallenges = async (levelId) => {
 
 // Leaderboard function
 export const fetchLeaderboard = async () => {
-    const response = await fetch(getApiUrl('/api/leaderboard'));
-    if (!response.ok) throw new Error('Failed to fetch leaderboard');
-    return response.json();
+    try {
+        const response = await fetch('http://localhost:5001/api/leaderboard');
+        if (!response.ok) {
+            throw new Error('Failed to fetch leaderboard');
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching leaderboard:', error);
+        throw error;
+    }
 };
 
 // Daily Puzzle functions

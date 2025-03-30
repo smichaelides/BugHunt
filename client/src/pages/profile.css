@@ -1,0 +1,202 @@
+.profile-page {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.profile-header {
+    display: grid;
+    grid-template-columns: 100px 1fr 100px; /* Creates 3 columns: back button, title, empty space */
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.profile-header h1 {
+    margin: 0;
+    color: #333;
+    font-size: 2rem;
+    text-align: center;
+    grid-column: 2; /* Places title in middle column */
+}
+
+.back-button {
+    grid-column: 1; /* Places back button in first column */
+    background-color: transparent;
+    border: none;
+    color: #4a6ee0;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    transition: color 0.2s;
+    font-family: 'Monaco', monospace;
+    font-weight: bold;
+}
+
+.back-button:hover {
+    color: #2c4aa0;
+}
+
+.profile-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.profile-info {
+    text-align: center;
+    padding: 2rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #4a6ee0;
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-info h2 {
+    margin: 0;
+    color: #333;
+    font-size: 1.5rem;
+}
+
+.email {
+    color: #666;
+    margin-top: 0.5rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.stat-card {
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid #e2e8f0;
+}
+
+.stat-card h3 {
+    margin: 0;
+    color: #666;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-card p {
+    margin: 0;
+    color: #4a6ee0;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.leaderboard-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    border-radius: 8px;
+    gap: 0.5rem;
+    font-family: 'Monaco', monospace;
+    text-align: center;
+}
+
+.leaderboard-banner span {
+    font-size: 1.5rem;
+}
+
+.leaderboard-banner.success {
+    background-color: rgba(72, 187, 120, 0.1);
+    border: 1px solid #48bb78;
+    color: #2f855a;
+}
+
+.leaderboard-banner.info {
+    background-color: rgba(66, 153, 225, 0.1);
+    border: 1px solid #4299e1;
+    color: #2b6cb0;
+}
+
+.profile-loading {
+    text-align: center;
+    padding: 4rem;
+    color: #666;
+    font-family: 'Monaco', monospace;
+    font-size: 1.2rem;
+}
+
+/* Update badge item to have fixed width */
+.badge-item {
+    background: white;
+    border-radius: 8px;
+    padding: 1.25rem 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    min-width: 200px;
+    min-height: 140px;
+    flex-shrink: 0;
+    text-align: center;
+    transition: transform 0.2s, border-color 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid #e2e8f0;
+    font-family: 'Monaco', monospace;
+}
+
+.badge-item.earned {
+    border-color: #48bb78;
+    box-shadow: 0 2px 8px rgba(72, 187, 120, 0.2);
+}
+
+.badge-item.earned .badge-name {
+    color: #2f855a;
+}
+
+.badge-item.earned .badge-description {
+    color: #48bb78;
+}
+
+.badge-icon {
+    font-size: 1.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.badge-name {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #2563eb;
+    margin-bottom: 0.5rem;
+}
+
+.badge-description {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.badges-title {
+    margin: 2rem 0 1rem;
+    color: #333;
+    text-align: center;
+}
+
+h3 {
+    font-family: 'Monaco', monospace;;
+}
