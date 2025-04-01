@@ -16,54 +16,67 @@ const openai = new OpenAI({
 });
 
 // Constants
-const TOTAL_PUZZLES = 5; // Create 30 puzzles initially
+const TOTAL_PUZZLES = 30; // Create 30 puzzles per run
 const DIFFICULTY = 'Hard'; // All daily puzzles are hard
 
 // Function to generate a single daily puzzle using OpenAI
 async function generateDailyPuzzle() {
   console.log(`Generating a new daily puzzle...`);
   
-  const prompt = `Create a challenging but concise programming bug in Java for a daily puzzle. The bug should be interesting and not too obvious, but the solution should be concise.
+  const topics = [
+    'collections and generics',
+    'multithreading and synchronization',
+    'exception handling',
+    'inheritance and polymorphism',
+    'stream API',
+    'memory management',
+    'object equality',
+    'serialization',
+    'design patterns',
+    'null pointer handling',
+    'concurrency issues',
+    'IO operations',
+    'lambda expressions',
+    'method overloading/overriding',
+    'static context'
+  ];
+  
+  const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+  
+  const prompt = `Create a challenging but concise programming bug in Java focusing on ${randomTopic}. The bug should be interesting and not too obvious, but the solution should be concise.
 
-Focus on common and tricky programming mistakes like:
-- Off-by-one errors
-- Closure issues
-- Async/await misuse
-- Reference vs. value confusions
-- this binding problems
-- Edge case handling
-- Variable scope issues
+The bug should demonstrate a common pitfall or misconception in Java programming.
 
 Format the response exactly as follows:
 
 Description: [A clear description of the bug scenario]
 
 Buggy Code:
-\`\`\`
+\`\`\`java
 [Code with the bug - keep it under 12 lines]
 \`\`\`
 
 Correct Solution:
-\`\`\`
+\`\`\`java
 [Fixed code]
 \`\`\`
 
 Wrong Option 1:
-\`\`\`
+\`\`\`java
 [An incorrect solution that looks plausible]
 \`\`\`
 
 Wrong Option 2:
-\`\`\`
+\`\`\`java
 [Another incorrect solution]
 \`\`\`
 
 Wrong Option 3:
-\`\`\`
+\`\`\`java
 [A third incorrect solution]
 \`\`\`
 
-The wrong options should be plausible but incorrect in different ways. Each solution should be concise and focused on the bug.`;
+Each wrong option should represent a different common misconception or mistake that developers might make when trying to fix this issue.`;
 
   try {
     const response = await openai.chat.completions.create({
@@ -71,14 +84,14 @@ The wrong options should be plausible but incorrect in different ways. Each solu
       messages: [
         {
           role: "system",
-          content: "You are an expert programming tutor who creates challenging but educational programming puzzles."
+          content: "You are an expert Java programming tutor who creates challenging but educational programming puzzles."
         },
         {
           role: "user",
           content: prompt
         }
       ],
-      temperature: 0.7,
+      temperature: 0.8,
       max_tokens: 1000
     });
 
@@ -146,7 +159,7 @@ async function populateDailyPuzzles() {
     console.log(`Found ${existingCount} existing daily puzzles`);
 
     // Calculate how many more puzzles we need to create
-    const puzzlesToCreate = Math.max(0, TOTAL_PUZZLES - existingCount);
+    const puzzlesToCreate = TOTAL_PUZZLES;
     console.log(`Creating ${puzzlesToCreate} new daily puzzles`);
 
     // Generate and insert the puzzles
@@ -168,9 +181,9 @@ async function populateDailyPuzzles() {
       // Insert the puzzle into the database
       const insertQuery = `
         INSERT INTO public.daily_puzzles 
-        (Difficulty, Description, Code, CorrectSolution, WrongOption1, WrongOption2, WrongOption3, IsUsed)
+        (difficulty, description, code, correctsolution, wrongoption1, wrongoption2, wrongoption3, isused)
         VALUES ($1, $2, $3, $4, $5, $6, $7, false)
-        RETURNING PuzzleID
+        RETURNING puzzleid
       `;
       
       const insertValues = [
@@ -186,6 +199,9 @@ async function populateDailyPuzzles() {
       const result = await client.query(insertQuery, insertValues);
       const puzzleId = result.rows[0].puzzleid;
       console.log(`Inserted new daily puzzle with ID: ${puzzleId}`);
+      
+      // Add a small delay between API calls to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
     // Create initial active daily puzzle if none exists
