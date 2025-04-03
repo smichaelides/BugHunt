@@ -345,10 +345,10 @@ app.post('/api/auth/user', async (req, res) => {
         if (result.rows.length === 0) {
             console.log('Creating new user...');
             result = await pool.query(
-                `INSERT INTO public.users (username, email, name, streakcounter, points, challengescompleted) 
-                 VALUES ($1, $2, $3, 0, 0, 0) 
+                `INSERT INTO public.users (username, email, streakcounter, points, challengescompleted, lastactivitydate, logincount) 
+                 VALUES ($1, $2, 0, 0, 0, CURRENT_DATE, 1) 
                  RETURNING *`,
-                [nickname || name, email, name]
+                [nickname || name, email]
             );
             console.log('New user created:', result.rows[0]);
             
@@ -357,11 +357,21 @@ app.post('/api/auth/user', async (req, res) => {
             await pool.query(
                 `INSERT INTO public.user_progress (userid, completedlevels, unlockedlevels) 
                  VALUES ($1, ARRAY[]::integer[], ARRAY[1]::integer[])`,
-                [result.rows[0].id]
+                [result.rows[0].userid]
             );
             console.log('User progress initialized');
         } else {
-            console.log('User already exists');
+            // Update existing user's login count and last activity date
+            console.log('Updating existing user login count...');
+            result = await pool.query(
+                `UPDATE public.users 
+                 SET logincount = logincount + 1,
+                     lastactivitydate = CURRENT_DATE
+                 WHERE email = $1 
+                 RETURNING *`,
+                [email]
+            );
+            console.log('User login count updated');
         }
 
         res.json(result.rows[0]);
