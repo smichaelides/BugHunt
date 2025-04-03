@@ -15,9 +15,15 @@ async function resetDailyPuzzle() {
     console.log('Connected to the database');
 
     // Get the current date
-    const currentDate = new Date();
+    const currentDate = new Date();  // Use current system date (2025-04-03)
     const today = currentDate.toISOString().split('T')[0];
-    console.log(`Running reset for today: ${today}`);
+    
+    // Calculate tomorrow's date for expiration
+    const tomorrow = new Date(currentDate);
+    tomorrow.setDate(currentDate.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    
+    console.log(`Running reset for today: ${today} (expires: ${tomorrowStr})`);
 
     // Start a transaction
     await client.query('BEGIN');
