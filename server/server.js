@@ -209,7 +209,7 @@ app.get('/api/leaderboard', async (req, res) => {
             FROM public.users 
             WHERE points > 0  /* Only show users with points */
             ORDER BY points DESC 
-            LIMIT 10
+            LIMIT 5
         `;
         
         console.log('Executing query:', query);
