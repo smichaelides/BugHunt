@@ -49,6 +49,12 @@ const Login = () => {
 
       const userData = await response.json();
       console.log('User successfully saved:', userData);
+      
+      // Wait a short moment to ensure the database transaction is complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Redirect to home page after successful user creation
+      window.location.href = '/';
     } catch (error) {
       console.error('Failed to save user:', error);
     }
