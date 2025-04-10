@@ -263,13 +263,32 @@ const Hero = () => {
 };
 
 const fetchUserData = async (email) => {
-    try {
-        const response = await fetch(getApiUrl(`/api/auth/user/${encodeURIComponent(email)}`));
-        if (!response.ok) throw new Error('Failed to fetch user data');
-        return await response.json();
-    } catch (error) {
-        console.error('Error fetching user data:', error);
-        throw error;
+    const maxRetries = 3;
+    const retryDelay = 1000; // 1 second delay
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const response = await fetch(getApiUrl(`/api/auth/user/${encodeURIComponent(email)}`));
+            if (response.ok) {
+                return await response.json();
+            }
+            
+            // If this is the last attempt, throw the error
+            if (attempt === maxRetries) {
+                throw new Error('Failed to fetch user data. Please refresh page');
+            }
+            
+            // Wait before retrying
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+        } catch (error) {
+            // If this is the last attempt, throw the error
+            if (attempt === maxRetries) {
+                console.error('Error fetching user data:', error);
+                throw error;
+            }
+            // Wait before retrying
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+        }
     }
 };
 
