@@ -151,7 +151,7 @@ const Hero = () => {
     }
 
     if (loading) return <div>Loading...</div>;
-    if (error) return <div>Error: {error}</div>;
+    if (error) return <div>Error: {error} Please refresh the page</div>;
 
     return (
         <div className="hero-container">
@@ -263,8 +263,11 @@ const Hero = () => {
 };
 
 const fetchUserData = async (email) => {
+    // Initial 3 second wait
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    
     const maxRetries = 3;
-    const retryDelay = 1000; // 1 second delay
+    const retryDelay = 1000; // 1 second between retries
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
@@ -283,7 +286,7 @@ const fetchUserData = async (email) => {
         } catch (error) {
             // If this is the last attempt, throw the error
             if (attempt === maxRetries) {
-                console.error('Error fetching user data:', error);
+                console.error('Error fetching user data. Please refresh the page:', error);
                 throw error;
             }
             // Wait before retrying
