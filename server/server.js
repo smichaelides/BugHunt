@@ -458,7 +458,7 @@ app.get('/api/problem/completed/:email/:problemId', async (req, res) => {
     }
 });
 
-// Update the complete-challenge endpoint to award 10 points and increment challenges completed when a level is completed
+// Update the complete-challenge endpoint to award 5 points and increment challenges completed when a level is completed
 app.post('/api/user/complete-challenge', async (req, res) => {
     try {
         const { email, problemId, level } = req.body;
@@ -504,10 +504,10 @@ app.post('/api/user/complete-challenge', async (req, res) => {
                 VALUES ($1, $2, $3, CURRENT_DATE)
             `, [userId, problemId, level]);
             
-            // Update user stats with 10 points per challenge
+            // Update user stats with 5 points per challenge
             const updateQuery = await pool.query(`
                 UPDATE public.users
-                SET points = points + 10,
+                SET points = points + 5,
                     challengescompleted = challengescompleted + 1,
                     streakcounter = streakcounter + 1
                 WHERE userid = $1
@@ -841,10 +841,10 @@ app.post('/api/daily-puzzle/complete', async (req, res) => {
                 streakUpdated = true;
             }
             
-            // Update user stats with 10 points for daily puzzle - using lowercase column names
+            // Update user stats with 25 points for daily puzzle - using lowercase column names
             const updateQuery = await pool.query(`
                 UPDATE public.users
-                SET points = points + 10,
+                SET points = points + 25,
                     challengescompleted = challengescompleted + 1,
                     streakcounter = $1,
                     lastactivitydate = CURRENT_DATE
